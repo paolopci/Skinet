@@ -58,7 +58,7 @@ namespace API.Controllers
         [HttpPut("{id:int}")] // api/product/5
         public async Task<ActionResult<Product>> UpdateProduct(int id, [FromBody] Product model)
         {
-            if (model == null || id != model.Id)
+            if (model == null)
             {
                 return BadRequest();
             }
