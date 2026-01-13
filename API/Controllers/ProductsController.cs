@@ -1,30 +1,23 @@
 ﻿using Core.Entities;
-using Infrastructure.Data;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController : ControllerBase
+    public class ProductsController(IProductRepository repository) : ControllerBase
     {
-        private readonly StoreContext context;
-        public ProductsController(StoreContext context)
-        {
-            this.context = context;
-        }
-
         [HttpGet] // api/products
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts()
         {
-            return await context.Products.ToListAsync();
+            return Ok(await repository.GetProductsAsync());
         }
 
         [HttpGet("{id:int}")] // api/product/5
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await repository.GetProductByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -50,8 +43,8 @@ namespace API.Controllers
                 Brand = model.Brand,
                 QuantityInStock = model.QuantityInStock
             };
-            context.Products.Add(newProduct);
-            await context.SaveChangesAsync();
+            repository.AddProduct(newProduct);
+            await repository.SaveChangesAsync();
             return CreatedAtAction(nameof(GetProduct), new { id = newProduct.Id }, newProduct);
         }
 
@@ -63,7 +56,7 @@ namespace API.Controllers
                 return BadRequest();
             }
 
-            var product = await context.Products.FindAsync(id);
+            var product = await repository.GetProductByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -77,21 +70,21 @@ namespace API.Controllers
             product.Brand = model.Brand;
             product.QuantityInStock = model.QuantityInStock;
 
-            await context.SaveChangesAsync();
+            await repository.SaveChangesAsync();
             return Ok(product);
         }
 
         [HttpDelete("{id:int}")] // api/product/5
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await repository.GetProductByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
+            repository.DeleteProduct(product);
+            await repository.SaveChangesAsync();
             return NoContent();
         }
     }
