@@ -1,22 +1,72 @@
 ﻿using Core.Entities;
 using Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Security.Cryptography.X509Certificates;
-
 namespace Infrastructure.Data
 {
     public class ProductRepository(StoreContext context) : IProductRepository
     {
 
-        public async Task<IReadOnlyList<Product>> GetProductsAsync()
+        public async Task<IReadOnlyList<Product>> GetProductsAsync(
+            string? brand,
+            string? type,
+            ProductSort? sort,
+            SortDirection? direction)
         {
-            return await context.Products.ToListAsync();
+            IQueryable<Product> query = context.Products;
+
+            if (!string.IsNullOrWhiteSpace(brand))
+            {
+                query = query.Where(x => x.Brand == brand);
+            }
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(x => x.Type == type);
+            }
+
+            if (sort == ProductSort.Name)
+            {
+                query = direction == SortDirection.Desc
+                    ? query.OrderByDescending(x => x.Name)
+                    : query.OrderBy(x => x.Name);
+            }
+            else if (sort == ProductSort.Price)
+            {
+                query = direction == SortDirection.Desc
+                    ? query.OrderByDescending(x => x.Price)
+                    : query.OrderBy(x => x.Price);
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<Product?> GetProductByIdAsync(int id)
         {
             return await context.Products.FindAsync(id);
+        }
+
+        public async Task<IReadOnlyList<string>> GetBrandsAsync()
+        {
+            return await context.Products
+                .Where(x => !string.IsNullOrWhiteSpace(x.Brand))
+                .Select(x => x.Brand)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<string>> GetTypesAsync()
+        {
+            return await context.Products
+                .Where(x => !string.IsNullOrWhiteSpace(x.Type))
+                .Select(x => x.Type)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
         }
 
         public void AddProduct(Product product)

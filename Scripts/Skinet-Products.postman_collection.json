@@ -48,6 +48,147 @@
           ]
         },
         {
+          "name": "Get Products (Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "brand",
+                  "value": "{{brand}}"
+                },
+                {
+                  "key": "type",
+                  "value": "{{type}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "brand",
+                      "value": "{{brand}}"
+                    },
+                    {
+                      "key": "type",
+                      "value": "{{type}}"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Sample Product\",\n    \"price\": 10,\n    \"description\": \"Sample description\",\n    \"pictureUrl\": \"images/sample.png\",\n    \"type\": \"Type A\",\n    \"brand\": \"Brand A\",\n    \"quantityInStock\": 5\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Brands",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/brands",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "brands"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products/brands",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "brands"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\"Brand A\",\"Brand B\"]"
+            }
+          ]
+        },
+        {
+          "name": "Get Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "types"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products/types",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "types"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[\"Type A\",\"Type B\"]"
+            }
+          ]
+        },
+        {
           "name": "Get Product By Id",
           "request": {
             "method": "GET",
@@ -321,6 +462,14 @@
     {
       "key": "productId",
       "value": "1"
+    },
+    {
+      "key": "brand",
+      "value": "Brand A"
+    },
+    {
+      "key": "type",
+      "value": "Type A"
     }
   ]
 }

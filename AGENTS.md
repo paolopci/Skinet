@@ -40,6 +40,7 @@ Nota operativa:
 - Quando provi la build, usa sempre permessi elevati.
 - Se la build da soluzione fallisce ma `API` compila, puoi lanciare `dotnet build` direttamente in `API/`.
 - In caso di errore "Accesso negato" su file in `API/obj`, ripeti la build con permessi elevati.
+- Se c'è già una build in esecuzione e devi rilanciarla, termina la build attiva e avvia una nuova istanza con permessi elevati.
 
 ## Stile di Codifica e Convenzioni di Naming
 - Indentazione a 4 spazi e formattazione standard .NET.

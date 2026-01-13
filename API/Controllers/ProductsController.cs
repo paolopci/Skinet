@@ -8,13 +8,29 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController(IProductRepository repository) : ControllerBase
     {
-        [HttpGet] // api/products
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts()
+        [HttpGet] // api/products?brand={brand}&type={type}&sort={Name|Price}&direction={Asc|Desc}
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(
+            [FromQuery] string? brand,
+            [FromQuery] string? type,
+            [FromQuery] ProductSort? sort,
+            [FromQuery] SortDirection? direction)
         {
-            return Ok(await repository.GetProductsAsync());
+            return Ok(await repository.GetProductsAsync(brand, type, sort, direction));
         }
 
-        [HttpGet("{id:int}")] // api/product/5
+        [HttpGet("brands")] // api/products/brands
+        public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
+        {
+            return Ok(await repository.GetBrandsAsync());
+        }
+
+        [HttpGet("types")] // api/products/types
+        public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+        {
+            return Ok(await repository.GetTypesAsync());
+        }
+
+        [HttpGet("{id:int}")] // api/products/5
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
             var product = await repository.GetProductByIdAsync(id);
@@ -25,7 +41,7 @@ namespace API.Controllers
             return Ok(product);
         }
 
-        [HttpPost] // api/product
+        [HttpPost] // api/products
         public async Task<ActionResult<Product>> CreateProduct([FromBody] Product model)
         {
             if (model == null)
@@ -48,7 +64,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = newProduct.Id }, newProduct);
         }
 
-        [HttpPut("{id:int}")] // api/product/5
+        [HttpPut("{id:int}")] // api/products/5
         public async Task<ActionResult<Product>> UpdateProduct(int id, [FromBody] Product model)
         {
             if (model == null)
@@ -74,7 +90,7 @@ namespace API.Controllers
             return Ok(product);
         }
 
-        [HttpDelete("{id:int}")] // api/product/5
+        [HttpDelete("{id:int}")] // api/products/5
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await repository.GetProductByIdAsync(id);
