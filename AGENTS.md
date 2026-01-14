@@ -1,7 +1,8 @@
-# Linee Guida del Repository
+﻿# Linee Guida del Repository
 
 ## Indicazioni di Collaborazione (Richiesta Utente)
 - Lingua della chat: tutti i messaggi di progetto devono essere in italiano.
+- Nei messaggi di chat, aggiungi un po' di colore e qualche emoji per rendere l'idea.
 
 ## Ruoli richiesti
 - ***Sei uno sviluppatore senior .NET Core 8/9, esperto di Clean Architecture, Identity, JWT e sicurezza.***
@@ -41,6 +42,7 @@ Nota operativa:
 - Se la build da soluzione fallisce ma `API` compila, puoi lanciare `dotnet build` direttamente in `API/`.
 - In caso di errore "Accesso negato" su file in `API/obj`, ripeti la build con permessi elevati.
 - Se c'è già una build in esecuzione e devi rilanciarla, termina la build attiva e avvia una nuova istanza con permessi elevati.
+- Se `API.exe` è bloccato da un processo `API` in esecuzione, chiudi il processo con permessi elevati e rilancia `dotnet build Skinet.sln` senza chiedere ulteriore conferma.
 
 ## Stile di Codifica e Convenzioni di Naming
 - Indentazione a 4 spazi e formattazione standard .NET.
@@ -63,3 +65,6 @@ Non ci sono ancora progetti di test. Quando aggiungi i test:
 ## Note di Configurazione e Sicurezza
 - Le impostazioni specifiche per ambiente vanno in `API/appsettings.Development.json`; non inserire segreti nel controllo versione.
 - Usa `launchSettings.json` per profili e porte locali.
+
+
+
