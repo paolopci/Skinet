@@ -1,5 +1,6 @@
 ﻿using Core.Entities;
 using Core.Interfaces;
+using Core.Specification;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -15,7 +16,11 @@ namespace API.Controllers
             [FromQuery] ProductSort? sort,
             [FromQuery] SortDirection? direction)
         {
-            return Ok(await repository.ListAllAsync());
+            var spec = new ProductSpecification(brand, type);
+            var products= await repository.ListAsync(spec);
+
+            return Ok(products);
+
         }
 
         [HttpGet("brands")] // api/products/brands

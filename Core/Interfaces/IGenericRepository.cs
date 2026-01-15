@@ -7,7 +7,11 @@ namespace Core.Interfaces
         Task<T?> GetByIdAsync(int id);
         
         Task<IReadOnlyList<T>> ListAllAsync();
-        
+
+        Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec);
+
+        Task<T?> GetEntityWithSpec(ISpecification<T> spec);
+
         void Add(T entity);
         
         void Update(T entity);
@@ -17,9 +21,5 @@ namespace Core.Interfaces
         Task<bool> SaveAllAsync();
         
         bool Exists(int id);
-
-        Task<T?> GetEntityWithSpec(ISpecification<T> spec);
-        
-        Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec);
     }
 }
