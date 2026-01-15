@@ -14,13 +14,23 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/products",
+              "raw": "{{baseUrl}}/api/products?sort={{sort}}&direction={{direction}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "products"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "{{sort}}"
+                },
+                {
+                  "key": "direction",
+                  "value": "{{direction}}"
+                }
               ]
             }
           },
@@ -30,13 +40,23 @@
               "originalRequest": {
                 "method": "GET",
                 "url": {
-                  "raw": "{{baseUrl}}/api/products",
+                  "raw": "{{baseUrl}}/api/products?sort={{sort}}&direction={{direction}}",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
                     "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "{{sort}}"
+                    },
+                    {
+                      "key": "direction",
+                      "value": "{{direction}}"
+                    }
                   ]
                 }
               },
@@ -53,7 +73,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}",
+              "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}&sort={{sort}}&direction={{direction}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -69,6 +89,14 @@
                 {
                   "key": "type",
                   "value": "{{type}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}"
+                },
+                {
+                  "key": "direction",
+                  "value": "{{direction}}"
                 }
               ]
             }
@@ -79,7 +107,7 @@
               "originalRequest": {
                 "method": "GET",
                 "url": {
-                  "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}",
+                  "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}&sort={{sort}}&direction={{direction}}",
                   "host": [
                     "{{baseUrl}}"
                   ],
@@ -95,6 +123,14 @@
                     {
                       "key": "type",
                       "value": "{{type}}"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "{{sort}}"
+                    },
+                    {
+                      "key": "direction",
+                      "value": "{{direction}}"
                     }
                   ]
                 }
@@ -103,6 +139,140 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Sample Product\",\n    \"price\": 10,\n    \"description\": \"Sample description\",\n    \"pictureUrl\": \"images/sample.png\",\n    \"type\": \"Type A\",\n    \"brand\": \"Brand A\",\n    \"quantityInStock\": 5\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Products (Sorted)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?sort={{sort}}&direction={{direction}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "{{sort}}"
+                },
+                {
+                  "key": "direction",
+                  "value": "{{direction}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products?sort={{sort}}&direction={{direction}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "{{sort}}"
+                    },
+                    {
+                      "key": "direction",
+                      "value": "{{direction}}"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[]"
+            }
+          ]
+        },
+        {
+          "name": "Get Products (Filtered + Sorted Example)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}&sort={{sort}}&direction={{direction}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "brand",
+                  "value": "{{brand}}"
+                },
+                {
+                  "key": "type",
+                  "value": "{{type}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}"
+                },
+                {
+                  "key": "direction",
+                  "value": "{{direction}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products?brand={{brand}}&type={{type}}&sort={{sort}}&direction={{direction}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "brand",
+                      "value": "{{brand}}"
+                    },
+                    {
+                      "key": "type",
+                      "value": "{{type}}"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "{{sort}}"
+                    },
+                    {
+                      "key": "direction",
+                      "value": "{{direction}}"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[]"
             }
           ]
         },
@@ -470,6 +640,14 @@
     {
       "key": "type",
       "value": "Type A"
+    },
+    {
+      "key": "sort",
+      "value": "Price"
+    },
+    {
+      "key": "direction",
+      "value": "Desc"
     }
   ]
 }

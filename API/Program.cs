@@ -10,6 +10,7 @@ builder.Services.AddDbContext<StoreContext>(options =>
 
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 
 builder.Services.AddControllers();
@@ -27,7 +28,7 @@ try
 {
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
-    var context=services.GetRequiredService<StoreContext>();
+    var context = services.GetRequiredService<StoreContext>();
     await context.Database.MigrateAsync();
     await StoreContextSeed.SeedAsync(context);
 }

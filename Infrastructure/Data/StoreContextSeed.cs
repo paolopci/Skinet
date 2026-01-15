@@ -14,9 +14,9 @@ namespace Infrastructure.Data
             if (!context.Products.Any())
             {
                 var productData = await File.ReadAllTextAsync("../Infrastructure/Data/SeedData/products.json");
-                var products =JsonSerializer.Deserialize<List<Product>>(productData);
+                var products = JsonSerializer.Deserialize<List<Product>>(productData);
 
-                if (products==null)
+                if (products == null)
                 {
                     return;
                 }
