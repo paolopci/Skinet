@@ -14,6 +14,12 @@ public class SpecificationEvaluator<T> where T : BaseEntity
             query = query.Where(spec.Criteria); // x=>X.Brand==brand
         }
 
+        // Applica distinct se richiesto dalla specifica.
+        if (spec.IsDistinct)
+        {
+            query = query.Distinct();
+        }
+
         // Applica l'ordinamento, se definito nella specifica.
         if (spec.OrderBy != null)
         {
@@ -22,6 +28,12 @@ public class SpecificationEvaluator<T> where T : BaseEntity
         else if (spec.OrderByDescending != null)
         {
             query = query.OrderByDescending(spec.OrderByDescending);
+        }
+
+        // Applica la paginazione, se abilitata.
+        if (spec.IsPaginingEnabled)
+        {
+            query = query.Skip(spec.Skip).Take(spec.Take);
         }
 
         return query;

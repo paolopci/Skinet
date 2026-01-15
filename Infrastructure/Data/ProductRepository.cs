@@ -41,7 +41,7 @@ namespace Infrastructure.Data
                 query = query.OrderBy(x => x.Id);
             }
 
-            return await query.ToListAsync();
+            return await query.Skip(5).Take(5).ToListAsync();
         }
 
         public async Task<Product?> GetProductByIdAsync(int id)

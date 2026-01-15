@@ -51,6 +51,19 @@ Nota operativa:
 - Gli implicit using sono abilitati; rimuovi gli using inutilizzati in revisione.
 - Mantieni i controller in `API/Controllers` e i modelli di dominio in `Core/Entities`.
 
+## Best Practices - Repository & Specification (Decisione guidata)
+- Prima di introdurre il pattern **Generic Repository + Specification**, chiedi sempre se è necessario.
+- Adotta il pattern quando:
+  - il numero di entità è medio/alto (>= 4–5) con logiche di query ripetute
+  - filtri, ordinamenti e paginazioni sono ricorrenti tra più endpoint
+  - serve riutilizzare criteri di query in modo centralizzato e testabile
+- Evita il pattern quando:
+  - il numero di entità è basso (1–3) e le query sono semplici
+  - ogni entità richiede logiche di accesso dati molto specifiche
+- In caso di dubbio, parti con repository per entity e valuta un refactoring successivo.
+- Benefici: riduce duplicazioni, centralizza la logica di query, facilita test e manutenzione.
+- Trade-off: aggiunge astrazione e può risultare eccessivo in progetti piccoli.
+
 ## Linee Guida per i Test
 Non ci sono ancora progetti di test. Quando aggiungi i test:
 - Preferisci il naming dei progetti `*Tests` (es. `API.Tests`).

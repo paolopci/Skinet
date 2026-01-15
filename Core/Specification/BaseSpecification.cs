@@ -10,12 +10,21 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
     }
     // Criteri base della specifica.
     public Expression<Func<T, bool>>? Criteria => criteria;
+    // Indica se la query deve essere distinta.
+    public bool IsDistinct { get; private set; }
     // Ordinamento ascendente opzionale.
     public Expression<Func<T, object>>? OrderBy { get; private set; }
     // Ordinamento discendente opzionale.
     public Expression<Func<T, object>>? OrderByDescending { get; private set; }
 
+    public int Take { get; private set; }
+
+    public int Skip { get; private set; }
+
+    public bool IsPaginingEnabled { get; private set; }
+
     // Imposta l'ordinamento ascendente.
+
     protected void AddOrderBy(Expression<Func<T, object>> orderBy)
     {
         OrderBy = orderBy;
@@ -25,5 +34,19 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
     protected void AddOrderByDescending(Expression<Func<T, object>> orderByDescending)
     {
         OrderByDescending = orderByDescending;
+    }
+
+    // Applica paginazione alla query.
+    protected void ApplyPaging(int skip, int take)
+    {
+        Skip = skip;
+        Take = take;
+        IsPaginingEnabled = true;
+    }
+
+    // Imposta la query come distinct.
+    protected void ApplyDistinct()
+    {
+        IsDistinct = true;
     }
 }

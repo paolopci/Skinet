@@ -2,7 +2,6 @@
 using Core.Interfaces;
 using Core.Specification;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
 
 namespace API.Controllers
 {
@@ -10,22 +9,12 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
     {
-        [HttpGet] // api/products?brand={brand}&type={type}&sort={Name|Price}&direction={Asc|Desc}
+        [HttpGet] // api/products?brands=brand1,brand2&types=type1,type2&sort={priceAsc|priceDesc}
         public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(
-            [FromQuery] string? brand,
-            [FromQuery] string? type,
-            [FromQuery] ProductSort? sort,
-            [FromQuery] SortDirection? direction)
+            [FromQuery] ProductSpecParams specParams)
         {
-            var spec = new ProductSpecification(brand, type);
-            Expression<Func<Product, object>> orderBy = sort switch
-            {
-                ProductSort.Name => x => x.Name,
-                ProductSort.Price => x => x.Price,
-                _ => x => x.Id
-            };
-
-            var products = await repository.ListAsync(spec, orderBy, direction);
+            var spec = new ProductSpecification(specParams);
+            var products = await repository.ListAsync(spec);
 
             return Ok(products);
 
@@ -34,15 +23,27 @@ namespace API.Controllers
         [HttpGet("brands")] // api/products/brands
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            // todo: implement method
-            return Ok();
+            var products = await repository.ListAllAsync();
+            var brands = products
+                .Select(x => x.Brand)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return Ok(brands);
         }
 
         [HttpGet("types")] // api/products/types
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {
-            // todo: implement method
-            return Ok();
+            var products = await repository.ListAllAsync();
+            var types = products
+                .Select(x => x.Type)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return Ok(types);
         }
 
         [HttpGet("{id:int}")] // api/products/5
