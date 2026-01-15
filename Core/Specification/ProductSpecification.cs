@@ -9,5 +9,6 @@ public class ProductSpecification : BaseSpecification<Product>
         (string.IsNullOrWhiteSpace(type) || x.Type == type)
     )
     {
+        // Qui si definiscono solo i filtri; l'ordinamento è opzionale e si aggiunge altrove.
     }
-}
+ }
