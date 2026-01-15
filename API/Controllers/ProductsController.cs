@@ -2,6 +2,7 @@
 using Core.Interfaces;
 using Core.Specification;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace API.Controllers
 {
@@ -17,7 +18,14 @@ namespace API.Controllers
             [FromQuery] SortDirection? direction)
         {
             var spec = new ProductSpecification(brand, type);
-            var products= await repository.ListAsync(spec);
+            Expression<Func<Product, object>> orderBy = sort switch
+            {
+                ProductSort.Name => x => x.Name,
+                ProductSort.Price => x => x.Price,
+                _ => x => x.Id
+            };
+
+            var products = await repository.ListAsync(spec, orderBy, direction);
 
             return Ok(products);
 

@@ -1,6 +1,7 @@
 using Core.Entities;
 using Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Data
 {
@@ -46,9 +47,21 @@ namespace Infrastructure.Data
             return await ApplySpecification(spec).FirstOrDefaultAsync();
         }
 
-        public async  Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec)
+        public async Task<IReadOnlyList<T>> ListAsync(
+            ISpecification<T> spec,
+            Expression<Func<T, object>>? orderBy = null,
+            SortDirection? direction = null)
         {
-            return await ApplySpecification(spec).ToListAsync();
+            var query = ApplySpecification(spec);
+
+            if (orderBy != null)
+            {
+                query = direction == SortDirection.Desc
+                    ? query.OrderByDescending(orderBy)
+                    : query.OrderBy(orderBy);
+            }
+
+            return await query.ToListAsync();
         }
 
 
