@@ -1,6 +1,7 @@
 ﻿using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
+using API.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -9,25 +10,33 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
     {
-        [HttpGet] // api/products?brands=brand1,brand2&types=type1,type2&sort={priceAsc|priceDesc}
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(
+        [HttpGet] // api/products?brands=brand1,brand2&types=type1,type2&sort={priceAsc|priceDesc}&pageIndex=1&pageSize=10
+        public async Task<ActionResult<Pagination<Product>>> GetProducts(
             [FromQuery] ProductSpecParams specParams)
         {
             var spec = new ProductSpecification(specParams);
+            // Spec per conteggio totale senza paging.
+            var countSpec = new ProductCountSpecification(specParams);
+            // Conteggio totale per calcolo pagine lato client.
+            var totalCount = await repository.CountAsync(countSpec);
             var products = await repository.ListAsync(spec);
-
-            return Ok(products);
-
+            // Risposta paginata con totale elementi e totale pagine.
+            var pagination = new Pagination<Product>(
+                specParams.PageIndex,
+                specParams.PageSize,
+                totalCount,
+                products);
+            return Ok(pagination);
         }
 
         [HttpGet("brands")] // api/products/brands
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            var products = await repository.ListAllAsync();
+            var spec = new ProductBrandSpecification();
+            var products = await repository.ListAsync(spec);
             var brands = products
-                .Select(x => x.Brand)
+                .Select(x => x.Brand!)
                 .Distinct()
-                .OrderBy(x => x)
                 .ToList();
 
             return Ok(brands);
@@ -36,11 +45,11 @@ namespace API.Controllers
         [HttpGet("types")] // api/products/types
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {
-            var products = await repository.ListAllAsync();
+            var spec = new ProductTypeSpecification();
+            var products = await repository.ListAsync(spec);
             var types = products
-                .Select(x => x.Type)
+                .Select(x => x.Type!)
                 .Distinct()
-                .OrderBy(x => x)
                 .ToList();
 
             return Ok(types);
@@ -131,3 +140,6 @@ namespace API.Controllers
         }
     }
 }
+
+
+

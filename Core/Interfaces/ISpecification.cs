@@ -15,6 +15,6 @@ public interface ISpecification<T>
 
     int Take { get; }
     int Skip { get; }
-    bool IsPaginingEnabled { get; }
+    bool IsPagingEnabled { get; }
 }
 

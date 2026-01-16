@@ -21,7 +21,7 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
 
     public int Skip { get; private set; }
 
-    public bool IsPaginingEnabled { get; private set; }
+    public bool IsPagingEnabled { get; private set; }
 
     // Imposta l'ordinamento ascendente.
 
@@ -41,7 +41,7 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
     {
         Skip = skip;
         Take = take;
-        IsPaginingEnabled = true;
+        IsPagingEnabled = true;
     }
 
     // Imposta la query come distinct.
