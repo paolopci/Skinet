@@ -60,6 +60,97 @@
           ]
         },
         {
+          "name": "Get Products (Pagination)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const totalCount = json.totalCount ?? json.TotalCount;",
+                  "const totalPages = json.totalPages ?? json.TotalPages;",
+                  "const data = json.data ?? json.Data;",
+                  "",
+                  "pm.test(\"Pagination fields present\", function () {",
+                  "  pm.expect(totalCount).to.be.a(\"number\");",
+                  "  pm.expect(totalPages).to.be.a(\"number\");",
+                  "  pm.expect(data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?pageIndex={{pageIndex}}&pageSize={{pageSize}}&sort={{sort}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "pageIndex",
+                  "value": "{{pageIndex}}"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/products?pageIndex={{pageIndex}}&pageSize={{pageSize}}&sort={{sort}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "pageIndex",
+                      "value": "{{pageIndex}}"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "{{pageSize}}"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "{{sort}}"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{}"
+            }
+          ]
+        },
+        {
           "name": "Get Products (Filtered)",
           "request": {
             "method": "GET",
@@ -612,6 +703,14 @@
     {
       "key": "sort",
       "value": "priceAsc"
+    },
+    {
+      "key": "pageIndex",
+      "value": "1"
+    },
+    {
+      "key": "pageSize",
+      "value": "10"
     }
   ]
 }

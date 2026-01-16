@@ -1,4 +1,4 @@
-﻿# Linee Guida del Repository
+# Linee Guida del Repository
 
 ## Indicazioni di Collaborazione (Richiesta Utente)
 - Lingua della chat: tutti i messaggi di progetto devono essere in italiano.
@@ -17,7 +17,7 @@ Applicazione web full-stack con API ASP.NET Core e client Angular (da aggiungere
 
 ### Procedura di modifica
 1) Analizza il progetto e identifica la modifica da eseguire.
-2) Crea una checklist concettuale (1-7 punti) e presentala prima di procedere, usando indicatori grafici: 🟩 per step aperti e 🟨 ~~...~~ per step completati.
+2) Crea una checklist concettuale (1-7 punti) e presentala prima di procedere, usando indicatori grafici: ?? per step aperti e ?? ~~...~~ per step completati.
 3) Richiedi conferma per ogni step; se l'utente scrive "si step all", procedi con tutti gli step rimanenti.
 4) Dopo ogni modifica o uso di tool, valida l'esito in 1-2 frasi e correggi se serve.
 5) Testa e verifica il codice modificato e riformatta i file toccati.
@@ -41,8 +41,8 @@ Nota operativa:
 - Quando provi la build, usa sempre permessi elevati.
 - Se la build da soluzione fallisce ma `API` compila, puoi lanciare `dotnet build` direttamente in `API/`.
 - In caso di errore "Accesso negato" su file in `API/obj`, ripeti la build con permessi elevati.
-- Se c'è già una build in esecuzione e devi rilanciarla, termina la build attiva e avvia una nuova istanza con permessi elevati.
-- Se `API.exe` è bloccato da un processo `API` in esecuzione, chiudi il processo con permessi elevati e rilancia `dotnet build Skinet.sln` senza chiedere ulteriore conferma.
+- Se c'? gi? una build in esecuzione e devi rilanciarla, termina la build attiva e avvia una nuova istanza con permessi elevati.
+- Se `API.exe` ? bloccato da un processo `API` in esecuzione, chiudi il processo con permessi elevati e rilancia `dotnet build Skinet.sln` senza chiedere ulteriore conferma.
 
 ## Stile di Codifica e Convenzioni di Naming
 - Indentazione a 4 spazi e formattazione standard .NET.
@@ -52,17 +52,17 @@ Nota operativa:
 - Mantieni i controller in `API/Controllers` e i modelli di dominio in `Core/Entities`.
 
 ## Best Practices - Repository & Specification (Decisione guidata)
-- Prima di introdurre il pattern **Generic Repository + Specification**, chiedi sempre se è necessario.
+- Prima di introdurre il pattern **Generic Repository + Specification**, chiedi sempre se ? necessario.
 - Adotta il pattern quando:
-  - il numero di entità è medio/alto (>= 4–5) con logiche di query ripetute
-  - filtri, ordinamenti e paginazioni sono ricorrenti tra più endpoint
+  - il numero di entit? ? medio/alto (>= 4?5) con logiche di query ripetute
+  - filtri, ordinamenti e paginazioni sono ricorrenti tra pi? endpoint
   - serve riutilizzare criteri di query in modo centralizzato e testabile
 - Evita il pattern quando:
-  - il numero di entità è basso (1–3) e le query sono semplici
-  - ogni entità richiede logiche di accesso dati molto specifiche
+  - il numero di entit? ? basso (1?3) e le query sono semplici
+  - ogni entit? richiede logiche di accesso dati molto specifiche
 - In caso di dubbio, parti con repository per entity e valuta un refactoring successivo.
 - Benefici: riduce duplicazioni, centralizza la logica di query, facilita test e manutenzione.
-- Trade-off: aggiunge astrazione e può risultare eccessivo in progetti piccoli.
+- Trade-off: aggiunge astrazione e pu? risultare eccessivo in progetti piccoli.
 
 ## Linee Guida per i Test
 Non ci sono ancora progetti di test. Quando aggiungi i test:
@@ -80,4 +80,7 @@ Non ci sono ancora progetti di test. Quando aggiungi i test:
 - Usa `launchSettings.json` per profili e porte locali.
 
 
+
+
+- MCP SQL Server: il database di default via MCP e' `SkinetDB`, quindi usa direttamente le `SELECT` senza `USE`.
 
