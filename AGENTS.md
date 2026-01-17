@@ -17,7 +17,7 @@ Applicazione web full-stack con API ASP.NET Core e client Angular (da aggiungere
 
 ### Procedura di modifica
 1) Analizza il progetto e identifica la modifica da eseguire.
-2) Crea una checklist concettuale (1-7 punti) e presentala prima di procedere, usando indicatori grafici: ?? per step aperti e ?? ~~...~~ per step completati.
+2) Crea una checklist concettuale (1-7 punti) e presentala prima di procedere, usando indicatori grafici: 🟦 per step aperti e 🟧 ~~...~~ per step completati.
 3) Richiedi conferma per ogni step; se l'utente scrive "si step all", procedi con tutti gli step rimanenti.
 4) Dopo ogni modifica o uso di tool, valida l'esito in 1-2 frasi e correggi se serve.
 5) Testa e verifica il codice modificato e riformatta i file toccati.

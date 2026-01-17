@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
+
+    public class ProductsController(IGenericRepository<Product> repository) : BaseApiController
     {
         [HttpGet] // api/products?brands=brand1,brand2&types=type1,type2&sort={priceAsc|priceDesc}&pageIndex=1&pageSize=10
         public async Task<ActionResult<Pagination<Product>>> GetProducts(
@@ -17,16 +16,8 @@ namespace API.Controllers
             var spec = new ProductSpecification(specParams);
             // Spec per conteggio totale senza paging.
             var countSpec = new ProductCountSpecification(specParams);
-            // Conteggio totale per calcolo pagine lato client.
-            var totalCount = await repository.CountAsync(countSpec);
-            var products = await repository.ListAsync(spec);
-            // Risposta paginata con totale elementi e totale pagine.
-            var pagination = new Pagination<Product>(
-                specParams.PageIndex,
-                specParams.PageSize,
-                totalCount,
-                products);
-            return Ok(pagination);
+
+            return await CreatePageResult(repository, spec, specParams.PageIndex, specParams.PageSize);
         }
 
         [HttpGet("brands")] // api/products/brands
