@@ -167,6 +167,18 @@
                 "type": "text/javascript"
               },
               "listen": "test"
+            },
+            {
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CORS header is present\", function () {",
+                  "  pm.response.to.have.header(\"Access-Control-Allow-Origin\");",
+                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"https://localhost:4200\");",
+                  "});"
+                ]
+              },
+              "listen": "test"
             }
           ]
         },
