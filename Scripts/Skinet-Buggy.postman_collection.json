@@ -448,6 +448,76 @@
               "status": "Bad Request"
             }
           ]
+        },
+        {
+          "name": "CORS Preflight (OPTIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204/200\", function () {",
+                  "  pm.expect([200,204]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test(\"CORS headers present\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "url": {
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "raw": "{{baseUrl}}/api/buggy/not-found",
+              "path": [
+                "api",
+                "buggy",
+                "not-found"
+              ]
+            },
+            "method": "OPTIONS",
+            "header": [
+              {
+                "value": "{{corsOrigin}}",
+                "key": "Origin"
+              },
+              {
+                "value": "GET",
+                "key": "Access-Control-Request-Method"
+              },
+              {
+                "value": "Content-Type",
+                "key": "Access-Control-Request-Headers"
+              }
+            ]
+          },
+          "response": [
+            {
+              "originalRequest": {
+                "url": {
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "raw": "{{baseUrl}}/api/buggy/not-found",
+                  "path": [
+                    "api",
+                    "buggy",
+                    "not-found"
+                  ]
+                },
+                "method": "OPTIONS"
+              },
+              "code": 204,
+              "name": "CORS Preflight",
+              "status": "No Content",
+              "_postman_previewlanguage": "text",
+              "body": ""
+            }
+          ]
         }
       ]
     }
@@ -456,6 +526,10 @@
     {
       "key": "baseUrl",
       "value": "https://localhost:5001"
+    },
+    {
+      "value": "https://localhost:4200",
+      "key": "corsOrigin"
     }
   ]
 }

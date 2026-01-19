@@ -13,6 +13,15 @@ builder.Services.AddDbContext<StoreContext>(options =>
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -23,6 +32,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 
