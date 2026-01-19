@@ -482,3 +482,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Codex skill packages and local Postman exports
+*.skill
+postman/
+Reports/

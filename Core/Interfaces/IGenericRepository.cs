@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+using Core.Entities;
 
 namespace Core.Interfaces
 {
@@ -12,6 +12,8 @@ namespace Core.Interfaces
             ISpecification<T> spec,
             System.Linq.Expressions.Expression<Func<T, object>>? orderBy = null,
             SortDirection? direction = null);
+        // Conteggio totale degli elementi per una specifica (usato per la paginazione).
+        Task<int> CountAsync(ISpecification<T> spec);
 
         Task<T?> GetEntityWithSpec(ISpecification<T> spec);
 
@@ -26,3 +28,4 @@ namespace Core.Interfaces
         bool Exists(int id);
     }
 }
+

@@ -1,48 +1,49 @@
 ﻿using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
+using API.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
+
+    public class ProductsController(IGenericRepository<Product> repository) : BaseApiController
     {
-        [HttpGet] // api/products?brand={brand}&type={type}&sort={Name|Price}&direction={Asc|Desc}
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(
-            [FromQuery] string? brand,
-            [FromQuery] string? type,
-            [FromQuery] ProductSort? sort,
-            [FromQuery] SortDirection? direction)
+        [HttpGet] // api/products?brands=brand1,brand2&types=type1,type2&sort={priceAsc|priceDesc}&pageIndex=1&pageSize=10
+        public async Task<ActionResult<Pagination<Product>>> GetProducts(
+            [FromQuery] ProductSpecParams specParams)
         {
-            var spec = new ProductSpecification(brand, type);
-            Expression<Func<Product, object>> orderBy = sort switch
-            {
-                ProductSort.Name => x => x.Name,
-                ProductSort.Price => x => x.Price,
-                _ => x => x.Id
-            };
+            var spec = new ProductSpecification(specParams);
+            // Spec per conteggio totale senza paging.
+            var countSpec = new ProductCountSpecification(specParams);
 
-            var products = await repository.ListAsync(spec, orderBy, direction);
-
-            return Ok(products);
-
+            return await CreatePageResult(repository, spec, specParams.PageIndex, specParams.PageSize);
         }
 
         [HttpGet("brands")] // api/products/brands
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            // todo: implement method
-            return Ok();
+            var spec = new ProductBrandSpecification();
+            var products = await repository.ListAsync(spec);
+            var brands = products
+                .Select(x => x.Brand!)
+                .Distinct()
+                .ToList();
+
+            return Ok(brands);
         }
 
         [HttpGet("types")] // api/products/types
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {
-            // todo: implement method
-            return Ok();
+            var spec = new ProductTypeSpecification();
+            var products = await repository.ListAsync(spec);
+            var types = products
+                .Select(x => x.Type!)
+                .Distinct()
+                .ToList();
+
+            return Ok(types);
         }
 
         [HttpGet("{id:int}")] // api/products/5
@@ -130,3 +131,6 @@ namespace API.Controllers
         }
     }
 }
+
+
+
