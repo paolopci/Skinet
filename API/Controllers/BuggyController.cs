@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,6 +53,22 @@ namespace API.Controllers
         public ActionResult GetServiceUnavailable()
         {
             return StatusCode(503, "Servizio non disponibile");
+        }
+
+        // Test 400 Validation Error.
+        [HttpPost("validationerror")]
+        public ActionResult GetValidationError([FromBody] ValidationTestRequest request)
+        {
+            return ValidationProblem();
+        }
+
+        public class ValidationTestRequest
+        {
+            [Required]
+            public string Name { get; set; } = string.Empty;
+
+            [Required]
+            public string Email { get; set; } = string.Empty;
         }
     }
 }

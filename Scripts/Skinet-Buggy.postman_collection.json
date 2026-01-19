@@ -385,6 +385,69 @@
               "listen": "test"
             }
           ]
+        },
+        {
+          "name": "400 Validation Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "raw": "{{baseUrl}}/api/buggy/validationerror",
+              "path": [
+                "api",
+                "buggy",
+                "validationerror"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "body": "{\\n  \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\\n  \"title\": \"One or more validation errors occurred.\",\\n  \"status\": 400,\\n  \"errors\": {\\n    \"Name\": [\\n      \"The Name field is required.\"\\n    ],\\n    \"Email\": [\\n      \"The Email field is required.\"\\n    ]\\n  },\\n  \"traceId\": \"00-00000000000000000000000000000000-0000000000000000-00\"\\n}",
+              "_postman_previewlanguage": "json",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "raw": "{{baseUrl}}/api/buggy/validationerror",
+                  "path": [
+                    "api",
+                    "buggy",
+                    "validationerror"
+                  ]
+                }
+              },
+              "name": "400 Bad Request",
+              "code": 400,
+              "status": "Bad Request"
+            }
+          ]
         }
       ]
     }
