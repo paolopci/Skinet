@@ -1,14 +1,14 @@
 @echo off
 setlocal
-set COLLECTION=D:\test\angular\Skinet\postman\Skinet-Products.postman_collection.json
+set COLLECTION=D:\test\angular\Skinet\Scripts\Skinet-Buggy.postman_collection.json
 set ENV=D:\test\angular\Skinet\postman\Skinet.postman_environment.json
 set REPORT_DIR=D:\test\angular\Skinet\Reports
 set TS=%date:~6,4%%date:~3,2%%date:~0,2%_%time:~0,2%%time:~3,2%%time:~6,2%
 set TS=%TS: =0%
-set REPORT_FILE=%REPORT_DIR%\products-report-%TS%.html
+set REPORT_FILE=%REPORT_DIR%\buggy-report-%TS%.html
 set KEEP_REPORTS=10
 
-echo Avvio test Products con Newman...
+echo Avvio test Buggy con Newman...
 
 where newman >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
@@ -36,8 +36,6 @@ if not exist "%REPORT_DIR%" (
   echo Cartella report non trovata: %REPORT_DIR%
   exit /b 1
 )
-
-for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "Get-Content '%COLLECTION%' | ConvertFrom-Json | Select-Object -ExpandProperty item | ForEach-Object { $_.item } | Where-Object { $_.name -like 'Get Products Filtered*' } | ForEach-Object { $_.request.url }"`) do echo Filtro in collection: %%F
 
 newman run "%COLLECTION%" -e "%ENV%" -r cli,html --reporter-html-export "%REPORT_FILE%" --insecure
 set NEWMAN_EXIT=%ERRORLEVEL%
@@ -67,5 +65,5 @@ if %NEWMAN_EXIT% NEQ 0 (
 echo Test completati con successo.
 echo Report: %REPORT_FILE%
 
-for /f "skip=%KEEP_REPORTS% delims=" %%F in ('dir /b /o-d "%REPORT_DIR%\products-report-*.html"') do del "%REPORT_DIR%\%%F"
+for /f "skip=%KEEP_REPORTS% delims=" %%F in ('dir /b /o-d "%REPORT_DIR%\buggy-report-*.html"') do del "%REPORT_DIR%\%%F"
 endlocal

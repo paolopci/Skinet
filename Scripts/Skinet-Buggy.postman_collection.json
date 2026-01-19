@@ -1,0 +1,547 @@
+{
+  "info": {
+    "name": "Skinet - Buggy",
+    "_postman_id": "b47b1a74-9f0e-4d6e-9b1f-2b5c0b7db2c6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Buggy",
+      "item": [
+        {
+          "name": "401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/unauthorized",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "unauthorized"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/unauthorized",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "unauthorized"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "text",
+              "body": "Unauthorized"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "403 Forbidden",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/forbidden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "forbidden"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/forbidden",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "forbidden"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "text",
+              "body": "Forbidden"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 403\", function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "404 Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/not-found",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "not-found"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/not-found",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "not-found"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "text",
+              "body": "Not Found"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            },
+            {
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CORS header is present\", function () {",
+                  "  pm.response.to.have.header(\"Access-Control-Allow-Origin\");",
+                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"https://localhost:4200\");",
+                  "});"
+                ]
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "550 Custom Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/status-550",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "status-550"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "550 Custom Status",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/status-550",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "status-550"
+                  ]
+                }
+              },
+              "status": "Custom Status",
+              "code": 550,
+              "_postman_previewlanguage": "json",
+              "body": "Errore personalizzato 550"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 550\", function () {",
+                  "  pm.response.to.have.status(550);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "500 Server Error",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/server-error",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "server-error"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/server-error",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "server-error"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "text",
+              "body": "Errore 500 generato intenzionalmente"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 500\", function () {",
+                  "  pm.response.to.have.status(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "302 Redirect Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/redirect-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "redirect-products"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "302 Found",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/redirect-products",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "redirect-products"
+                  ]
+                }
+              },
+              "status": "Found",
+              "code": 302,
+              "_postman_previewlanguage": "text",
+              "body": ""
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 302\", function () {",
+                  "  pm.response.to.have.status(302);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "503 Service Unavailable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buggy/service-unavailable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buggy",
+                "service-unavailable"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "503 Service Unavailable",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/buggy/service-unavailable",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "buggy",
+                    "service-unavailable"
+                  ]
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "_postman_previewlanguage": "text",
+              "body": "Service Unavailable"
+            }
+          ],
+          "event": [
+            {
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 503\", function () {",
+                  "  pm.response.to.have.status(503);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              },
+              "listen": "test"
+            }
+          ]
+        },
+        {
+          "name": "400 Validation Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "raw": "{{baseUrl}}/api/buggy/validationerror",
+              "path": [
+                "api",
+                "buggy",
+                "validationerror"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "body": "{\\n  \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\\n  \"title\": \"One or more validation errors occurred.\",\\n  \"status\": 400,\\n  \"errors\": {\\n    \"Name\": [\\n      \"The Name field is required.\"\\n    ],\\n    \"Email\": [\\n      \"The Email field is required.\"\\n    ]\\n  },\\n  \"traceId\": \"00-00000000000000000000000000000000-0000000000000000-00\"\\n}",
+              "_postman_previewlanguage": "json",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "raw": "{{baseUrl}}/api/buggy/validationerror",
+                  "path": [
+                    "api",
+                    "buggy",
+                    "validationerror"
+                  ]
+                }
+              },
+              "name": "400 Bad Request",
+              "code": 400,
+              "status": "Bad Request"
+            }
+          ]
+        },
+        {
+          "name": "CORS Preflight (OPTIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204/200\", function () {",
+                  "  pm.expect([200,204]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test(\"CORS headers present\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "url": {
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "raw": "{{baseUrl}}/api/buggy/not-found",
+              "path": [
+                "api",
+                "buggy",
+                "not-found"
+              ]
+            },
+            "method": "OPTIONS",
+            "header": [
+              {
+                "value": "{{corsOrigin}}",
+                "key": "Origin"
+              },
+              {
+                "value": "GET",
+                "key": "Access-Control-Request-Method"
+              },
+              {
+                "value": "Content-Type",
+                "key": "Access-Control-Request-Headers"
+              }
+            ]
+          },
+          "response": [
+            {
+              "originalRequest": {
+                "url": {
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "raw": "{{baseUrl}}/api/buggy/not-found",
+                  "path": [
+                    "api",
+                    "buggy",
+                    "not-found"
+                  ]
+                },
+                "method": "OPTIONS"
+              },
+              "code": 204,
+              "name": "CORS Preflight",
+              "status": "No Content",
+              "_postman_previewlanguage": "text",
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:5001"
+    },
+    {
+      "value": "https://localhost:4200",
+      "key": "corsOrigin"
+    }
+  ]
+}
