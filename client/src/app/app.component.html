@@ -1,3 +1,14 @@
 <app-header></app-header>
 
-<h1 class="text-3xl font-bold underline">Welcome to {{ title() }}</h1>
+<div class="container mt-6">
+  <h2 class="text-3xl font-bold underline">Welcome to {{ title() }}</h2>
+  <p class="mt-4 text-sm text-gray-600">Prodotti: {{ products.length }}</p>
+  @if (products.length === 0) {
+    <p class="mt-2 text-sm text-gray-500">Nessun prodotto trovato. Verifica API e seed dati.</p>
+  }
+  <ul class="list-disc pl-6">
+    @for (product of products; track product.id) {
+      <li>{{ product.name }}</li>
+    }
+  </ul>
+</div>
