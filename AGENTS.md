@@ -9,11 +9,11 @@
 - ***Sei uno sviluppatore senior Angular 20+ e TypeScript.***
 
 ## Contesto del progetto
-Applicazione web full-stack con API ASP.NET Core e client Angular (da aggiungere). Backend con servizi JWT e Swagger.
+Applicazione web full-stack con API ASP.NET Core e client Angular 21. Backend con servizi JWT e Swagger.
 
 ## Tecnologie del Progetto
 - Back-end: .NET 9 Web API, Entity Framework, LINQ, JWT, Swagger, Postman, xUnit.
-- Client (in arrivo): Angular CLI 21+, Tailwind.
+- Client: Angular CLI 21+, TypeScript, Tailwind.
 
 ### Procedura di modifica
 1) Analizza il progetto e identifica la modifica da eseguire.
@@ -30,6 +30,7 @@ Questa soluzione .NET 9 e suddivisa in tre progetti. Usa `Skinet.sln` per build 
 - `Core/`: entita di dominio e astrazioni principali (attualmente `Entities/`).
 - `Infrastructure/`: implementazioni che dipendono da `Core/`, referenziate da `API`.
 - `API/API.http`: richieste HTTP rapide per test locali.
+- `client/`: applicazione front-end Angular 21 (CLI), UI e layout.
 
 ## Comandi di Build, Test e Sviluppo
 Esegui questi comandi dalla root del repo:
@@ -37,6 +38,15 @@ Esegui questi comandi dalla root del repo:
 - `dotnet run --project API/API.csproj` - avvia la Web API.
 - `dotnet watch --project API/API.csproj` - avvia con hot reload durante lo sviluppo.
 - `dotnet test Skinet.sln` - esegue i test (quando vengono aggiunti progetti di test).
+- `npm install --prefix client` - installa dipendenze client.
+- `npm run start --prefix client` - avvia il client Angular.
+- `npm run build --prefix client` - build di produzione client.
+- `npm run test --prefix client` - test client (quando presenti).
+- `cd client && npx --yes ng serve` - avvia il client con Angular CLI.
+- `cd client && npx --yes ng build` - build di produzione con Angular CLI.
+- `cd client && npx --yes ng test` - test client con Angular CLI (quando presenti).
+Nota operativa client:
+- Preferisci i comandi `npm` per coerenza con gli script del progetto; usa `ng` dalla cartella `client/` quando ti serve un comando specifico della CLI.
 Nota operativa:
 - Quando provi la build, usa sempre permessi elevati.
 - Se la build da soluzione fallisce ma `API` compila, puoi lanciare `dotnet build` direttamente in `API/`.
