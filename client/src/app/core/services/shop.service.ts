@@ -8,6 +8,9 @@ import { map } from 'rxjs';
   providedIn: 'root',
 })
 export class ShopService {
+  types: string[] = [];
+  brands: string[] = [];
+
   baseUrl = 'https://localhost:5001/api/';
 
   private http = inject(HttpClient);
@@ -30,5 +33,23 @@ export class ShopService {
           return Array.isArray(data) ? data : [];
         }),
       );
+  }
+
+  getBrands() {
+    // se hai già types in memoria non rifaccio la chiamata
+    // facciamo questa chiamata una volta sola all'avvio dell'applicazione
+    if (this.brands.length > 0) return;
+    return this.http.get<string[]>(this.baseUrl + 'products/brands').subscribe({
+      next: (response) => (this.brands = response),
+    });
+  }
+
+  getTypes() {
+    // se hai già types in memoria non rifaccio la chiamata
+    // facciamo questa chiamata una volta sola all'avvio dell'applicazione
+    if (this.types.length > 0) return;
+    return this.http.get<string[]>(this.baseUrl + 'products/types').subscribe({
+      next: (response) => (this.types = response),
+    });
   }
 }

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { MatBadge, MatButton, MatIcon } from '../../shared/material';
+import { MATERIAL_IMPORTS } from '../../shared/material';
 
 @Component({
   selector: 'app-header',
-  imports: [MatIcon, MatButton, MatBadge],
+  imports: [MATERIAL_IMPORTS],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
