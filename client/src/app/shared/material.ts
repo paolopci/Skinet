@@ -5,6 +5,7 @@ import { MatCard } from '@angular/material/card';
 import { MatCardActions, MatCardContent } from '@angular/material/card';
 import { MatDivider } from '@angular/material/divider';
 import { MatSelectionList, MatListOption } from '@angular/material/list';
+import { MatDialogModule } from '@angular/material/dialog';
 
 // prettier-ignore
 const MATERIAL_IMPORTS = [
@@ -14,6 +15,7 @@ const MATERIAL_IMPORTS = [
     MatCard, 
     MatCardContent, 
     MatCardActions, 
+    MatDialogModule,
     MatDivider,
     MatSelectionList,
     MatListOption
