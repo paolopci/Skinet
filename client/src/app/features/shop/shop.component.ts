@@ -5,6 +5,7 @@ import { ProductItemComponent } from './product-item/product-item.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { MatSelectionListChange } from '@angular/material/list';
+import { ShopParams } from '../../shared/models/shop-params';
 import {
   FiltersDialogComponent,
   FiltersDialogData,
@@ -20,12 +21,12 @@ import {
 export class ShopComponent {
   private shopService = inject(ShopService);
   private dialogService = inject(MatDialog);
-  private allProducts = signal<Product[]>([]);
   products = signal<Product[]>([]);
+  shopParams = new ShopParams();
 
   selectedBrands: string[] = [];
   selectedTypes: string[] = [];
-  selectedSort = 'name';
+  selectedSort = this.shopParams.sort;
   sortOptions = [
     { name: 'Nome A-Z', value: 'name' },
     { name: 'Prezzo \u2191', value: 'priceAsc' },
@@ -50,18 +51,7 @@ export class ShopComponent {
     this.shopService.getBrands();
     this.shopService.getTypes();
 
-    this.shopService.getProducts().subscribe({
-      next: (response) => {
-        this.allProducts.set(response);
-        this.applyFilters();
-      },
-      error: (error) => {
-        console.log(error);
-      },
-      complete: () => {
-        console.log('Request has completed');
-      },
-    });
+    this.loadProducts();
   }
 
   openFiltersDialog() {
@@ -87,7 +77,10 @@ export class ShopComponent {
         if (!result) return;
         this.selectedBrands = result.selectedBrands;
         this.selectedTypes = result.selectedTypes;
-        this.applyFilters();
+        this.shopParams.brands = [...this.selectedBrands];
+        this.shopParams.types = [...this.selectedTypes];
+        this.shopParams.pageIndex = 1;
+        this.loadProducts();
       });
   }
 
@@ -95,32 +88,22 @@ export class ShopComponent {
     const selectedOption = event.options[0];
     if (!selectedOption) return;
     this.selectedSort = selectedOption.value as string;
-    this.applyFilters();
+    this.shopParams.sort = this.selectedSort;
+    this.shopParams.pageIndex = 1;
+    this.loadProducts();
   }
 
-  private applyFilters() {
-    const selectedBrands = this.selectedBrands;
-    const selectedTypes = this.selectedTypes;
-    const filtered = this.allProducts().filter((product) => {
-      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-      const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(product.type);
-      return brandMatch && typeMatch;
+  private loadProducts() {
+    this.shopService.getProducts(this.shopParams).subscribe({
+      next: (response) => {
+        this.products.set(response);
+      },
+      error: (error) => {
+        console.log(error);
+      },
+      complete: () => {
+        console.log('Request has completed');
+      },
     });
-
-    const sorted = [...filtered].sort((left, right) => {
-      if (this.selectedSort === 'priceAsc') {
-        return left.price - right.price || left.id - right.id;
-      }
-      if (this.selectedSort === 'priceDesc') {
-        return right.price - left.price || left.id - right.id;
-      }
-
-      const nameCompare = left.name.localeCompare(right.name, undefined, {
-        sensitivity: 'base',
-      });
-      return nameCompare || left.id - right.id;
-    });
-
-    this.products.set(sorted);
   }
 }

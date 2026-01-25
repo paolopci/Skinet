@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Product } from '../../shared/models/product';
 import { Pagination } from '../../shared/models/pagination';
+import { ShopParams } from '../../shared/models/shop-params';
 import { map } from 'rxjs';
 
 @Injectable({
@@ -15,9 +16,28 @@ export class ShopService {
 
   private http = inject(HttpClient);
 
-  getProducts() {
+  getProducts(params: ShopParams) {
+    let httpParams = new HttpParams()
+      .set('pageIndex', params.pageIndex)
+      .set('pageSize', params.pageSize)
+      .set('sort', params.sort);
+
+    if (params.brands.length > 0) {
+      httpParams = httpParams.set('brands', params.brands.join(','));
+    }
+
+    if (params.types.length > 0) {
+      httpParams = httpParams.set('types', params.types.join(','));
+    }
+
+    if (params.search.trim().length > 0) {
+      httpParams = httpParams.set('search', params.search);
+    }
+
     return this.http
-      .get<Pagination<Product> | Product[]>(this.baseUrl + 'products?pageSize=20')
+      .get<Pagination<Product> | Product[]>(this.baseUrl + 'products', {
+        params: httpParams,
+      })
       .pipe(
         map((response) => {
           if (Array.isArray(response)) {
