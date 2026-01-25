@@ -6,6 +6,7 @@ import { MatCardActions, MatCardContent } from '@angular/material/card';
 import { MatDivider } from '@angular/material/divider';
 import { MatSelectionList, MatListOption } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 
 // prettier-ignore
 const MATERIAL_IMPORTS = [
@@ -18,6 +19,8 @@ const MATERIAL_IMPORTS = [
     MatDialogModule,
     MatDivider,
     MatSelectionList,
-    MatListOption
+    MatListOption,
+    MatMenu,
+    MatMenuTrigger
 ];
 export { MATERIAL_IMPORTS };
