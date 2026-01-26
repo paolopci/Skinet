@@ -89,6 +89,7 @@ Non ci sono ancora progetti di test. Quando aggiungi i test:
 - Le impostazioni specifiche per ambiente vanno in `API/appsettings.Development.json`; non inserire segreti nel controllo versione.
 - Usa `launchSettings.json` per profili e porte locali.
 - Controllo MCP filesystem: all'inizio di ogni sessione verifica che il path `-v` in `C:\Users\Paolo\.codex\config.toml` punti alla root del progetto corrente; se non coincide, avvisa di aggiornarlo manualmente.
+- Se il `config.toml` non è leggibile per policy, chiedi la verifica manuale senza riproporre la fix dei caratteri “?”.
 
 - MCP SQL Server: il database di default via MCP e' `SkinetDB`, quindi usa direttamente le `SELECT` senza `USE`.
 
