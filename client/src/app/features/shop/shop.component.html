@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-3 px-4">
   @if (pagination()) {
     <div class="flex items-center justify-between gap-3">
-      <div class="flex flex-1 items-center justify-start">
+      <div class="flex flex-1 items-center justify-start pb-3 -mt-1">
         <mat-paginator
           [length]="pagination()!.totalCount"
           [pageIndex]="pagination()!.pageIndex - 1"
@@ -22,7 +22,7 @@
             name="search"
             [(ngModel)]="shopParams.search"
             placeholder="Search"
-            class="h-9 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+            class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
           />
           <button
             mat-icon-button
@@ -55,7 +55,7 @@
           name="search"
           [(ngModel)]="shopParams.search"
           placeholder="Search"
-          class="h-9 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+          class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
         />
         <button
           mat-icon-button
