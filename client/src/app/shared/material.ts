@@ -6,7 +6,7 @@ import { MatCardActions, MatCardContent } from '@angular/material/card';
 import { MatDivider } from '@angular/material/divider';
 import { MatSelectionList, MatListOption } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
 
 // prettier-ignore
@@ -21,8 +21,7 @@ const MATERIAL_IMPORTS = [
     MatDivider,
     MatSelectionList,
     MatListOption,
-    MatMenu,
-    MatMenuTrigger,
+    MatMenuModule,
     MatPaginator
 ];
 export { MATERIAL_IMPORTS };

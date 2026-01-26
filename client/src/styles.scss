@@ -15,3 +15,30 @@ body {
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
 }
+
+/* Patch definitiva per il menu mobile */
+.mat-mdc-menu-panel.mobile-menu {
+  max-width: none !important;
+  min-width: 250px !important;
+  
+  /* Selettore mirato al contenitore interno generato da Material */
+  .mat-mdc-menu-content {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px 0 !important;
+  }
+
+  /* Forza ogni pulsante voce ad occupare l'intera riga */
+  .mat-mdc-menu-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    
+    mat-icon {
+      margin-right: 12px !important;
+    }
+  }
+}

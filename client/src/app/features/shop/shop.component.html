@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-3 px-4">
   @if (pagination()) {
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex flex-1 items-center justify-start pb-3 -mt-1">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="flex w-full items-center justify-start pb-3 -mt-1 md:w-auto">
         <mat-paginator
           [length]="pagination()!.totalCount"
           [pageIndex]="pagination()!.pageIndex - 1"
@@ -11,11 +11,11 @@
           (page)="onPageChange($event)"
         ></mat-paginator>
       </div>
-      <div class="flex items-center gap-2 pb-3">
+      <div class="flex w-full flex-col gap-2 pb-3 md:w-auto md:flex-row md:items-center">
         <form
           #searchForm="ngForm"
           (ngSubmit)="onSearchChange()"
-          class="relative flex items-center"
+          class="relative flex items-center w-full md:w-64"
         >
           <input
             type="search"
@@ -23,7 +23,7 @@
             [(ngModel)]="shopParams.search"
             (ngModelChange)="onSearchInputChange($event)"
             placeholder="Search"
-            class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+            class="h-10 w-full rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
           />
           <button
             mat-icon-button
@@ -34,22 +34,22 @@
             <mat-icon>search</mat-icon>
           </button>
         </form>
-        <button mat-stroked-button (click)="openFiltersDialog()">
+        <button mat-stroked-button (click)="openFiltersDialog()" class="w-full md:w-auto">
           <mat-icon>filter_list</mat-icon>
           <span>Filters</span>
         </button>
-        <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+        <button mat-stroked-button [matMenuTriggerFor]="sortMenu" class="w-full md:w-auto">
           <mat-icon>{{ selectedSortIcon }}</mat-icon>
           <span>Ordina: {{ selectedSortLabel }}</span>
         </button>
       </div>
     </div>
   } @else {
-    <div class="flex justify-end gap-2 pb-3">
+    <div class="flex flex-col gap-2 pb-3 md:flex-row md:items-center md:justify-end">
       <form
         #searchForm="ngForm"
         (ngSubmit)="onSearchChange()"
-        class="relative flex items-center"
+        class="relative flex items-center w-full md:w-64"
       >
         <input
           type="search"
@@ -57,7 +57,7 @@
           [(ngModel)]="shopParams.search"
           (ngModelChange)="onSearchInputChange($event)"
           placeholder="Search"
-          class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+          class="h-10 w-full rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
         />
         <button
           mat-icon-button
@@ -68,11 +68,11 @@
           <mat-icon>search</mat-icon>
         </button>
       </form>
-      <button mat-stroked-button (click)="openFiltersDialog()">
+      <button mat-stroked-button (click)="openFiltersDialog()" class="w-full md:w-auto">
         <mat-icon>filter_list</mat-icon>
         <span>Filters</span>
       </button>
-      <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+      <button mat-stroked-button [matMenuTriggerFor]="sortMenu" class="w-full md:w-auto">
         <mat-icon>{{ selectedSortIcon }}</mat-icon>
         <span>Ordina: {{ selectedSortLabel }}</span>
       </button>
@@ -103,7 +103,7 @@
 }
 
 @if (products().length > 0) {
-  <div class="grid grid-cols-4 gap-4 px-4">
+  <div class="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4">
     @for (product of products(); track product.id) {
       <app-product-item [product]="product"></app-product-item>
     }
