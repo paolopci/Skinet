@@ -1,14 +1,81 @@
 <div class="flex flex-col gap-3 px-4">
-  <div class="flex justify-end gap-2">
-    <button mat-stroked-button (click)="openFiltersDialog()">
-      <mat-icon>filter_list</mat-icon>
-      <span>Filters</span>
-    </button>
-    <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
-      <mat-icon>{{ selectedSortIcon }}</mat-icon>
-      <span>Ordina: {{ selectedSortLabel }}</span>
-    </button>
-  </div>
+  @if (pagination()) {
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex flex-1 items-center justify-start">
+        <mat-paginator
+          [length]="pagination()!.totalCount"
+          [pageIndex]="pagination()!.pageIndex - 1"
+          [pageSize]="pagination()!.pageSize"
+          [pageSizeOptions]="[5, 10, 20, 50]"
+          [showFirstLastButtons]="true"
+          (page)="onPageChange($event)"
+        ></mat-paginator>
+      </div>
+      <div class="flex items-center gap-2 pb-3">
+        <form
+          #searchForm="ngForm"
+          (ngSubmit)="onSearchChange()"
+          class="relative flex items-center"
+        >
+          <input
+            type="search"
+            name="search"
+            [(ngModel)]="shopParams.search"
+            placeholder="Search"
+            class="h-9 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+          />
+          <button
+            mat-icon-button
+            type="submit"
+            class="absolute right-1"
+            aria-label="Search"
+          >
+            <mat-icon>search</mat-icon>
+          </button>
+        </form>
+        <button mat-stroked-button (click)="openFiltersDialog()">
+          <mat-icon>filter_list</mat-icon>
+          <span>Filters</span>
+        </button>
+        <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+          <mat-icon>{{ selectedSortIcon }}</mat-icon>
+          <span>Ordina: {{ selectedSortLabel }}</span>
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="flex justify-end gap-2 pb-3">
+      <form
+        #searchForm="ngForm"
+        (ngSubmit)="onSearchChange()"
+        class="relative flex items-center"
+      >
+        <input
+          type="search"
+          name="search"
+          [(ngModel)]="shopParams.search"
+          placeholder="Search"
+          class="h-9 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
+        />
+        <button
+          mat-icon-button
+          type="submit"
+          class="absolute right-1"
+          aria-label="Search"
+        >
+          <mat-icon>search</mat-icon>
+        </button>
+      </form>
+      <button mat-stroked-button (click)="openFiltersDialog()">
+        <mat-icon>filter_list</mat-icon>
+        <span>Filters</span>
+      </button>
+      <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+        <mat-icon>{{ selectedSortIcon }}</mat-icon>
+        <span>Ordina: {{ selectedSortLabel }}</span>
+      </button>
+    </div>
+  }
 </div>
 
 <mat-menu #sortMenu="matMenu">
@@ -46,6 +113,7 @@
         [pageIndex]="pagination()!.pageIndex - 1"
         [pageSize]="pagination()!.pageSize"
         [pageSizeOptions]="[5, 10, 20, 50]"
+        [showFirstLastButtons]="true"
         (page)="onPageChange($event)"
       ></mat-paginator>
     </div>

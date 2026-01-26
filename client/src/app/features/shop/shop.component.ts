@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ShopService } from '../../core/services/shop.service';
 import { Product } from '../../shared/models/product';
 import { ProductItemComponent } from './product-item/product-item.component';
@@ -15,7 +16,7 @@ import {
 
 @Component({
   selector: 'app-shop',
-  imports: [ProductItemComponent, ...MATERIAL_IMPORTS],
+  imports: [FormsModule, ProductItemComponent, ...MATERIAL_IMPORTS],
   standalone: true,
   templateUrl: './shop.component.html',
   styleUrl: './shop.component.scss',
@@ -99,6 +100,11 @@ export class ShopComponent {
   onPageChange(event: PageEvent) {
     this.shopParams.pageIndex = event.pageIndex + 1;
     this.shopParams.pageSize = event.pageSize;
+    this.loadProducts();
+  }
+
+  onSearchChange() {
+    this.shopParams.pageIndex = 1;
     this.loadProducts();
   }
 
