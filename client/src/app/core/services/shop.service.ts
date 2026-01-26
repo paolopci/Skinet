@@ -41,16 +41,42 @@ export class ShopService {
       .pipe(
         map((response) => {
           if (Array.isArray(response)) {
-            return response;
+            return {
+              pageIndex: params.pageIndex,
+              pageSize: params.pageSize,
+              totalCount: response.length,
+              totalPages: 1,
+              data: response,
+            } as Pagination<Product>;
           }
 
-          const data =
+          const responseData =
             (response as { data?: unknown; items?: unknown }).data ??
             (response as { Data?: unknown; Items?: unknown }).Data ??
             (response as { data?: unknown; items?: unknown }).items ??
             (response as { Data?: unknown; Items?: unknown }).Items;
 
-          return Array.isArray(data) ? data : [];
+          const data = Array.isArray(responseData) ? responseData : [];
+
+          return {
+            pageIndex:
+              (response as { pageIndex?: number; PageIndex?: number }).pageIndex ??
+              (response as { PageIndex?: number }).PageIndex ??
+              params.pageIndex,
+            pageSize:
+              (response as { pageSize?: number; PageSize?: number }).pageSize ??
+              (response as { PageSize?: number }).PageSize ??
+              params.pageSize,
+            totalCount:
+              (response as { totalCount?: number; TotalCount?: number }).totalCount ??
+              (response as { TotalCount?: number }).TotalCount ??
+              data.length,
+            totalPages:
+              (response as { totalPages?: number; TotalPages?: number }).totalPages ??
+              (response as { TotalPages?: number }).TotalPages ??
+              1,
+            data,
+          } as Pagination<Product>;
         }),
       );
   }

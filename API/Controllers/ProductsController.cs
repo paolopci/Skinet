@@ -17,7 +17,7 @@ namespace API.Controllers
             // Spec per conteggio totale senza paging.
             var countSpec = new ProductCountSpecification(specParams);
 
-            return await CreatePageResult(repository, spec, specParams.PageIndex, specParams.PageSize);
+            return await CreatePageResult(repository, spec, countSpec, specParams.PageIndex, specParams.PageSize);
         }
 
         [HttpGet("brands")] // api/products/brands

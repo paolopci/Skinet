@@ -5,7 +5,9 @@ import { ProductItemComponent } from './product-item/product-item.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { MatSelectionListChange } from '@angular/material/list';
+import { PageEvent } from '@angular/material/paginator';
 import { ShopParams } from '../../shared/models/shop-params';
+import { Pagination } from '../../shared/models/pagination';
 import {
   FiltersDialogComponent,
   FiltersDialogData,
@@ -22,6 +24,7 @@ export class ShopComponent {
   private shopService = inject(ShopService);
   private dialogService = inject(MatDialog);
   products = signal<Product[]>([]);
+  pagination = signal<Pagination<Product> | null>(null);
   shopParams = new ShopParams();
 
   selectedBrands: string[] = [];
@@ -93,10 +96,17 @@ export class ShopComponent {
     this.loadProducts();
   }
 
+  onPageChange(event: PageEvent) {
+    this.shopParams.pageIndex = event.pageIndex + 1;
+    this.shopParams.pageSize = event.pageSize;
+    this.loadProducts();
+  }
+
   private loadProducts() {
     this.shopService.getProducts(this.shopParams).subscribe({
       next: (response) => {
-        this.products.set(response);
+        this.products.set(response.data);
+        this.pagination.set(response);
       },
       error: (error) => {
         console.log(error);
