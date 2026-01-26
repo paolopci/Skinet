@@ -1,4 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { ShopService } from '../../core/services/shop.service';
 import { Product } from '../../shared/models/product';
@@ -27,6 +29,7 @@ export class ShopComponent {
   products = signal<Product[]>([]);
   pagination = signal<Pagination<Product> | null>(null);
   shopParams = new ShopParams();
+  private searchInput$ = new Subject<string>();
 
   selectedBrands: string[] = [];
   selectedTypes: string[] = [];
@@ -48,6 +51,10 @@ export class ShopComponent {
   }
 
   ngOnInit(): void {
+    this.searchInput$
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((value) => this.performSearch(value));
+
     this.initializeShop();
   }
 
@@ -104,6 +111,18 @@ export class ShopComponent {
   }
 
   onSearchChange() {
+    this.shopParams.pageIndex = 1;
+    this.loadProducts();
+  }
+
+  onSearchInputChange(value: string) {
+    this.searchInput$.next(value);
+  }
+
+  private performSearch(value: string) {
+    const trimmed = value.trim();
+    if (trimmed.length < 4) return;
+
     this.shopParams.pageIndex = 1;
     this.loadProducts();
   }

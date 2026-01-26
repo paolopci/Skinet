@@ -21,6 +21,7 @@
             type="search"
             name="search"
             [(ngModel)]="shopParams.search"
+            (ngModelChange)="onSearchInputChange($event)"
             placeholder="Search"
             class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
           />
@@ -54,6 +55,7 @@
           type="search"
           name="search"
           [(ngModel)]="shopParams.search"
+          (ngModelChange)="onSearchInputChange($event)"
           placeholder="Search"
           class="h-10 w-64 rounded-md border border-slate-300 px-3 pr-10 text-sm text-slate-900"
         />
