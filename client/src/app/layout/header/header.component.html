@@ -1,52 +1,62 @@
 <header class="shadow-md p-3 w-full bg-white">
-    <div class="flex items-center justify-between gap-6 max-w-screen-2xl mx-auto">
-        <div class="flex items-center gap-3">
-            <button mat-icon-button class="md:hidden" [matMenuTriggerFor]="mobileMenu" aria-label="Apri menu">
-                <mat-icon>menu</mat-icon>
-            </button>
-            <img class="h-12 w-auto object-contain" src="/images/logo.png" alt="app logo" />
-        </div>
-        <nav class="hidden md:flex items-center gap-6 my-2 uppercase text-lg tracking-wide">
-            <a>Home</a>
-            <a>Shop</a>
-            <a>Contact</a>
-        </nav>
-        <div class="flex items-center gap-3 ml-auto">
-            <a class="cart-icon" matBadge="5" matBadgeSize="large">
-                <mat-icon>shopping_cart</mat-icon>
-            </a>
-            @if (isLoggedIn) {
-            <button mat-stroked-button class="hidden md:inline-flex">Logout</button>
-            } @else {
-            <button mat-stroked-button class="hidden md:inline-flex">Login</button>
-            }
-        </div>
+  <div class="flex items-center justify-between gap-6 max-w-screen-2xl mx-auto">
+    <div class="flex items-center gap-3">
+      <button
+        mat-icon-button
+        class="md:hidden"
+        [matMenuTriggerFor]="mobileMenu"
+        aria-label="Apri menu"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+      <img
+        class="h-12 w-auto object-contain"
+        routerLink="/"
+        src="/images/logo.png"
+        alt="app logo"
+      />
     </div>
+    <nav class="hidden md:flex items-center gap-6 my-2 uppercase text-lg tracking-wide">
+      <a routerLink="/">Home</a>
+      <a routerLink="/shop">Shop</a>
+      <a routerLink="/contact">Contact</a>
+    </nav>
+    <div class="flex items-center gap-3 ml-auto">
+      <a class="cart-icon" matBadge="5" matBadgeSize="large">
+        <mat-icon>shopping_cart</mat-icon>
+      </a>
+      @if (isLoggedIn) {
+        <button mat-stroked-button class="hidden md:inline-flex">Logout</button>
+      } @else {
+        <button mat-stroked-button class="hidden md:inline-flex">Login</button>
+      }
+    </div>
+  </div>
 </header>
 
 <mat-menu #mobileMenu="matMenu" panelClass="mobile-menu">
+  <button mat-menu-item>
+    <mat-icon>home</mat-icon>
+    <span>Home</span>
+  </button>
+  <button mat-menu-item>
+    <mat-icon>storefront</mat-icon>
+    <span>Shop</span>
+  </button>
+  <button mat-menu-item>
+    <mat-icon>contact_mail</mat-icon>
+    <span>Contact</span>
+  </button>
+  <mat-divider></mat-divider>
+  @if (isLoggedIn) {
     <button mat-menu-item>
-        <mat-icon>home</mat-icon>
-        <span>Home</span>
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
     </button>
+  } @else {
     <button mat-menu-item>
-        <mat-icon>storefront</mat-icon>
-        <span>Shop</span>
+      <mat-icon>login</mat-icon>
+      <span>Login</span>
     </button>
-    <button mat-menu-item>
-        <mat-icon>contact_mail</mat-icon>
-        <span>Contact</span>
-    </button>
-    <mat-divider></mat-divider>
-    @if (isLoggedIn) {
-    <button mat-menu-item>
-        <mat-icon>logout</mat-icon>
-        <span>Logout</span>
-    </button>
-    } @else {
-    <button mat-menu-item>
-        <mat-icon>login</mat-icon>
-        <span>Login</span>
-    </button>
-    }
+  }
 </mat-menu>
