@@ -3,11 +3,13 @@ import { ActivatedRoute } from '@angular/router';
 import { catchError, EMPTY, finalize, switchMap, tap } from 'rxjs';
 import { ShopService } from '../../../core/services/shop.service';
 import { Product } from '../../../shared/models/product';
+import { CurrencyPipe } from '@angular/common';
+import { MATERIAL_IMPORTS } from '../../../shared/material';
 
 @Component({
   selector: 'app-product-details',
   standalone: true,
-  imports: [],
+  imports: [CurrencyPipe,...MATERIAL_IMPORTS],
   templateUrl: './product-details.component.html',
   styleUrl: './product-details.component.scss',
 })
