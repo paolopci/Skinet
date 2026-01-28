@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { HttpClient } from '@angular/common/http';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-test-error',
   standalone: true,
-  imports: [...MATERIAL_IMPORTS],
+  imports: [JsonPipe, ...MATERIAL_IMPORTS],
   templateUrl: './test-error.component.html',
   styleUrl: './test-error.component.scss',
 })
@@ -26,8 +27,8 @@ export class TestErrorComponent {
         this.validationErrors = [];
       },
       error: (error) => {
-        const errorMap = (error as { error?: { errors?: Record<string, string[]> } })
-          ?.error?.errors;
+        const errorMap = (error as { error?: { errors?: Record<string, string[]> } })?.error
+          ?.errors;
         this.validationErrors = errorMap ? Object.values(errorMap).flat() : [];
         this.handleError(error);
       },
