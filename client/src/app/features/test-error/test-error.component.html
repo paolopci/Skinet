@@ -1,0 +1,36 @@
+<mat-card>
+  <mat-card-title>Test Errori API</mat-card-title>
+  <mat-card-content>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <button mat-raised-button color="primary" (click)="get400ValidationError()">
+        400 Validation
+      </button>
+      <button mat-raised-button color="primary" (click)="get401Error()">401 Unauthorized</button>
+      <button mat-raised-button color="primary" (click)="get403Error()">403 Forbidden</button>
+      <button mat-raised-button color="primary" (click)="get404Error()">404 Not Found</button>
+      <button mat-raised-button color="primary" (click)="get500Error()">500 Server Error</button>
+      <button mat-raised-button color="primary" (click)="get503Error()">
+        503 Service Unavailable
+      </button>
+      <button mat-raised-button color="primary" (click)="get550Error()">550 Custom</button>
+      <button mat-raised-button color="primary" (click)="get505Error()">
+        505 HTTP Version Not Supported
+      </button>
+      <button mat-raised-button color="primary" (click)="getRedirectError()">
+        302 Redirect
+      </button>
+    </div>
+
+    <div class="mt-4" *ngIf="validationErrors.length > 0">
+      <h3 class="text-sm font-semibold">Validation Errors</h3>
+      <ul class="list-disc pl-4 text-sm text-red-600">
+        <li *ngFor="let err of validationErrors">{{ err }}</li>
+      </ul>
+    </div>
+
+    <div class="mt-4" *ngIf="lastError as err">
+      <h3 class="text-sm font-semibold">Ultimo errore</h3>
+      <pre class="text-xs whitespace-pre-wrap">{{ err | json }}</pre>
+    </div>
+  </mat-card-content>
+</mat-card>
