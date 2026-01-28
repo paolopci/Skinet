@@ -11,3 +11,19 @@
   width: 32px;
 }
 
+.active {
+  color: #7d007d;
+  font-weight: 700;
+}
+
+nav a.active {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+.mobile-menu .active,
+.mobile-menu .active mat-icon {
+  color: #7d007d;
+}
+

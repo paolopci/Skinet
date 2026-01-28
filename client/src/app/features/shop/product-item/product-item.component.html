@@ -1,7 +1,11 @@
 <mat-card appearance="raised">
   <img src="{{ product?.pictureUrl }}" alt="image of {{ product?.name }}" />
   <mat-card-content>
-    <h2 class="text-sm font-semibold uppercase">{{ product?.name }}</h2>
+    <a
+      class="text-sm font-semibold uppercase hover:underline"
+      [routerLink]="['/shop', product?.id]"
+      >{{ product?.name }}</a
+    >
     <p class="font-ligh">{{ product?.price | currency }}</p>
     <mat-card-actions>
       <button mat-stroked-button class="w-full">

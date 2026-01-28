@@ -81,6 +81,10 @@ export class ShopService {
       );
   }
 
+  getProduct(id: number) {
+    return this.http.get<Product>(`${this.baseUrl}products/${id}`);
+  }
+
   getBrands() {
     // se hai già types in memoria non rifaccio la chiamata
     // facciamo questa chiamata una volta sola all'avvio dell'applicazione
