@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
+import { JsonPipe, NgIf } from '@angular/common';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { HttpClient } from '@angular/common/http';
-import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-test-error',
   standalone: true,
-  imports: [JsonPipe, ...MATERIAL_IMPORTS],
+  imports: [JsonPipe, NgIf, ...MATERIAL_IMPORTS],
   templateUrl: './test-error.component.html',
   styleUrl: './test-error.component.scss',
 })

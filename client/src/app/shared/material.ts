@@ -1,7 +1,7 @@
 import { MatBadge } from '@angular/material/badge';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { MatCard } from '@angular/material/card';
+import { MatCard, MatCardTitle } from '@angular/material/card';
 import { MatCardActions, MatCardContent } from '@angular/material/card';
 import { MatDivider } from '@angular/material/divider';
 import { MatSelectionList, MatListOption } from '@angular/material/list';
@@ -27,6 +27,7 @@ const MATERIAL_IMPORTS = [
     MatMenuModule,
     MatPaginator,
     MatFormField,
-    MatLabel
+    MatLabel,
+    MatCardTitle
 ];
 export { MATERIAL_IMPORTS };
