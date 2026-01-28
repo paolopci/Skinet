@@ -1,0 +1,40 @@
+mat-card {
+    transition: all 0.2s ease-in-out;
+    transform: translateY(0);
+    border: 1px solid transparent;
+    overflow: hidden;
+    cursor: pointer;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+mat-card img {
+    transition: transform 0.3s ease-in-out;
+    display: block;
+    width: 100%;
+}
+
+// Unifichiamo tutti gli stati di interazione
+mat-card:hover, 
+mat-card:active, 
+mat-card:focus-within {
+    transform: translateY(-8px) !important; // Aumentato per essere molto visibile
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2) !important;
+    border-color: #3b82f6 !important;
+    z-index: 10;
+}
+
+mat-card:hover img, 
+mat-card:active img, 
+mat-card:focus-within img {
+    transform: scale(1.05) !important;
+}
+
+// Assicuriamoci che non ci siano media query che sovrascrivono
+@media (max-width: 600px) {
+    mat-card:active {
+        // Forza l'effetto al tocco su schermi piccoli
+        transform: translateY(-8px) !important;
+    }
+}
