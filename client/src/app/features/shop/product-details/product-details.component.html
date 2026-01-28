@@ -1,9 +1,9 @@
-@if (isLoading) {
+@if (isLoading()) {
   <p class="text-sm text-slate-500">Caricamento prodotto...</p>
-} @else if (product) {
-  <h1 class="text-2xl">{{ product.name }}</h1>
-} @else if (errorMessage) {
-  <p class="text-sm text-red-600">{{ errorMessage }}</p>
+} @else if (product()) {
+  <h1 class="text-2xl">{{ product()?.name }}</h1>
+} @else if (errorMessage()) {
+  <p class="text-sm text-red-600">{{ errorMessage() }}</p>
 } @else {
   <p class="text-sm text-slate-500">Prodotto non disponibile.</p>
 }
