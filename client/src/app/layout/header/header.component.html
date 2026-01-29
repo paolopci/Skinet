@@ -22,7 +22,7 @@
       class="hidden md:flex items-center gap-6 my-2 uppercase text-lg tracking-wide font-medium md:justify-self-center"
     >
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch">Home</a>
-      <a routerLink="/shop" routerLinkActive="active">Shop</a>
+      <a routerLink="/shop" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch">Shop</a>
       <a routerLink="/test-error" routerLinkActive="active">Errors</a>
     </nav>
     <div class="flex items-center gap-3 md:justify-self-end">
@@ -48,13 +48,18 @@
     <mat-icon>home</mat-icon>
     <span>Home</span>
   </button>
-  <button mat-menu-item routerLink="/shop" routerLinkActive="active">
+  <button
+    mat-menu-item
+    routerLink="/shop"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="exactMatch"
+  >
     <mat-icon>storefront</mat-icon>
     <span>Shop</span>
   </button>
-  <button mat-menu-item routerLink="/contact" routerLinkActive="active">
-    <mat-icon>contact_mail</mat-icon>
-    <span>Contact</span>
+  <button mat-menu-item routerLink="/test-error" routerLinkActive="active">
+    <mat-icon>error_outline</mat-icon>
+    <span>Errors</span>
   </button>
   <mat-divider></mat-divider>
   @if (isLoggedIn) {

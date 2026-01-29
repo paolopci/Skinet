@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, EMPTY, finalize, switchMap, tap } from 'rxjs';
 import { ShopService } from '../../../core/services/shop.service';
 import { Product } from '../../../shared/models/product';
@@ -9,7 +9,7 @@ import { MATERIAL_IMPORTS } from '../../../shared/material';
 @Component({
   selector: 'app-product-details',
   standalone: true,
-  imports: [CurrencyPipe,...MATERIAL_IMPORTS],
+  imports: [CurrencyPipe, RouterLink, ...MATERIAL_IMPORTS],
   templateUrl: './product-details.component.html',
   styleUrl: './product-details.component.scss',
 })
