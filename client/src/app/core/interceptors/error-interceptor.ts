@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { SnackbarService } from '../services/snackbar.service';
+import { extractValidationErrorMap } from '../../shared/utils/api-error';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -14,7 +15,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       switch (err.status) {
         case 400:
-          snackbar.showWarning(message ?? 'Richiesta non valida.');
+          if (!extractValidationErrorMap(err.error)) {
+            snackbar.showWarning(message ?? 'Richiesta non valida.');
+          }
           break;
         case 401:
           snackbar.showWarning(message ?? 'Non autorizzato. Effettua il login.');
@@ -27,12 +30,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           router.navigateByUrl('/not-found');
           break;
         case 500:
-          snackbar.showError(message ?? 'Errore del server.');
           router.navigateByUrl('/server');
           break;
         case 503:
         case 505:
-          snackbar.showError(message ?? 'Servizio non disponibile.');
           router.navigateByUrl('/server');
           break;
         case 550:

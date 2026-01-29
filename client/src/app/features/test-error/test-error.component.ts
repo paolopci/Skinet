@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { JsonPipe, NgFor, NgIf } from '@angular/common';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { HttpClient } from '@angular/common/http';
+import { extractValidationErrors } from '../../shared/utils/api-error';
 
 @Component({
   selector: 'app-test-error',
@@ -27,9 +28,7 @@ export class TestErrorComponent {
         this.validationErrors = [];
       },
       error: (error) => {
-        const errorMap = (error as { error?: { errors?: Record<string, string[]> } })?.error
-          ?.errors;
-        this.validationErrors = errorMap ? Object.values(errorMap).flat() : [];
+        this.validationErrors = extractValidationErrors((error as { error?: unknown })?.error);
         this.handleError(error);
       },
     });
