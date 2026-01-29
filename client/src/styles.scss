@@ -16,6 +16,46 @@ body {
   color: var(--mat-sys-on-surface);
 }
 
+/* Snackbar varianti (info/warning/error) */
+.mat-mdc-snack-bar-container.snackbar-info {
+  --mdc-snackbar-container-color: #1565c0;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mdc-snackbar-action-color: #bbdefb;
+  background-color: #1565c0;
+  color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-info .mdc-snackbar__surface {
+  background-color: #1565c0;
+  color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-warning {
+  --mdc-snackbar-container-color: #ef6c00;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mdc-snackbar-action-color: #ffe0b2;
+  background-color: #ef6c00;
+  color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-warning .mdc-snackbar__surface {
+  background-color: #ef6c00;
+  color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-error {
+  --mdc-snackbar-container-color: #c62828;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mdc-snackbar-action-color: #ffcdd2;
+  background-color: #c62828;
+  color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-error .mdc-snackbar__surface {
+  background-color: #c62828;
+  color: #ffffff;
+}
+
 /* Patch definitiva per il menu mobile */
 .mat-mdc-menu-panel.mobile-menu {
   max-width: none !important;
