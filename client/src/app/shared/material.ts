@@ -30,4 +30,10 @@ const MATERIAL_IMPORTS = [
     MatLabel,
     MatCardTitle
 ];
-export { MATERIAL_IMPORTS };
+const SNACKBAR_PANEL_CLASSES = {
+    error: 'snackbar-error',
+    warning: 'snackbar-warning',
+    info: 'snackbar-info',
+} as const;
+
+export { MATERIAL_IMPORTS, SNACKBAR_PANEL_CLASSES };
