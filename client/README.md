@@ -1,59 +1,64 @@
 # Client
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.0.
+Questo progetto e' stato generato con [Angular CLI](https://github.com/angular/angular-cli) versione 21.1.0.
 
-## Development server
+## Server di sviluppo
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Per avviare un server di sviluppo locale, usa:
 
 ```bash
-ng generate component component-name
+npm run start --prefix client
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Una volta avviato, apri il browser su `http://localhost:4200/`. L'applicazione si ricarica automaticamente quando modifichi i file sorgenti.
+
+## Generazione codice
+
+Angular CLI include tool di scaffolding. Per generare un componente:
 
 ```bash
-ng generate --help
+cd client && npx --yes ng generate component nome-componente
 ```
 
-## Building
-
-To build the project run:
+Per la lista completa degli schematics:
 
 ```bash
-ng build
+cd client && npx --yes ng generate --help
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Build
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Per compilare il progetto:
 
 ```bash
-ng test
+npm run build --prefix client
 ```
 
-## Running end-to-end tests
+Il build produce gli artefatti nella cartella `dist/`.
 
-For end-to-end (e2e) testing, run:
+## Test unitari
+
+Per eseguire i test (quando presenti):
 
 ```bash
-ng e2e
+npm run test --prefix client
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Test end-to-end
 
-## Additional Resources
+Per test e2e (quando presenti):
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+cd client && npx --yes ng e2e
+```
+
+## UI / Loader
+
+- Loader globale gestito da `LoadingService` e `loadingInterceptor`.
+- In `/shop` viene mostrata una progress bar orizzontale sotto l'header durante il caricamento delle card.
+- Fuori da `/shop` e' attivo il loader full-screen durante le chiamate HTTP.
+
+## Risorse utili
+
+Per maggiori informazioni su Angular CLI, visita la pagina ufficiale:
+[Angular CLI](https://angular.dev/tools/cli)
