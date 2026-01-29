@@ -1,6 +1,10 @@
 <app-header></app-header>
 
-@if (loading$ | async) {
+@if ((loading$ | async) && isShopRoute()) {
+  <mat-progress-bar mode="indeterminate" color="accent" class="shop-progress"> </mat-progress-bar>
+}
+
+@if ((loading$ | async) && !isShopRoute()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
     <div class="rounded-full bg-white p-4 shadow-lg">
       <div
