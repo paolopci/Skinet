@@ -10,7 +10,9 @@ export class LoadingService {
   show(): void {
     this.activeRequests += 1;
     if (this.activeRequests === 1) {
-      this.loadingSubject.next(true);
+      queueMicrotask(() => {
+        this.loadingSubject.next(true);
+      });
     }
   }
 
@@ -20,12 +22,16 @@ export class LoadingService {
     }
 
     if (this.activeRequests === 0) {
-      this.loadingSubject.next(false);
+      queueMicrotask(() => {
+        this.loadingSubject.next(false);
+      });
     }
   }
 
   reset(): void {
     this.activeRequests = 0;
-    this.loadingSubject.next(false);
+    queueMicrotask(() => {
+      this.loadingSubject.next(false);
+    });
   }
 }
