@@ -1,0 +1,58 @@
+<mat-card>
+  <mat-card-title class="text-center">Test Errori API</mat-card-title>
+  <mat-card-content>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <button mat-raised-button color="primary" (click)="get400ValidationError()">
+        400 Validation
+      </button>
+      <button mat-raised-button color="primary" (click)="get401Error()">401 Unauthorized</button>
+      <button mat-raised-button color="primary" (click)="get403Error()">403 Forbidden</button>
+      <button mat-raised-button color="primary" (click)="get404Error()">404 Not Found</button>
+      <button mat-raised-button color="primary" (click)="get500Error()">500 Server Error</button>
+      <button mat-raised-button color="primary" (click)="get503Error()">
+        503 Service Unavailable
+      </button>
+      <button mat-raised-button color="primary" (click)="get550Error()">550 Custom</button>
+      <button mat-raised-button color="primary" (click)="get505Error()">
+        505 HTTP Version Not Supported
+      </button>
+      <button mat-raised-button color="primary" (click)="getRedirectError()">
+        302 Redirect
+      </button>
+    </div>
+
+    <div class="mt-4" *ngIf="validationHasResponse">
+      <h3 class="text-sm font-semibold">Validation Errors</h3>
+      @if (validationProblemDetails) {
+        <div class="mt-2 flex items-center gap-3 text-xs text-slate-600">
+          <button
+            mat-stroked-button
+            color="primary"
+            class="min-h-0 h-7 text-xs"
+            (click)="showValidationDetails = !showValidationDetails"
+          >
+            {{ showValidationDetails ? 'Nascondi dettagli tecnici' : 'Mostra dettagli tecnici' }}
+          </button>
+          <span>Dettagli completi della risposta di validazione.</span>
+        </div>
+      }
+      @if (validationErrors.length > 0) {
+        <ul class="list-disc pl-4 text-sm text-red-600">
+          <li *ngFor="let err of validationErrors">{{ err }}</li>
+        </ul>
+      } @else {
+        <p class="text-sm text-slate-500">Nessun dettaglio per campo disponibile.</p>
+      }
+      @if (showValidationDetails && validationProblemDetails) {
+        <div class="mt-3 rounded border border-rose-200 bg-rose-50 p-3 text-xs text-rose-900 shadow-sm">
+          <pre class="whitespace-pre-wrap">{{ validationProblemDetails | json }}</pre>
+        </div>
+      }
+    </div>
+
+    <div class="mt-4" *ngIf="lastError as err">
+      <h3 class="text-sm font-semibold">Ultimo errore</h3>
+      <pre class="text-xs whitespace-pre-wrap">{{ err | json }}</pre>
+    </div>
+  </mat-card-content>
+</mat-card>

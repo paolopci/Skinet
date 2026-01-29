@@ -34,6 +34,13 @@ namespace API.Controllers
             return StatusCode(550, "Errore personalizzato 550");
         }
 
+        // Test 505 HTTP Version Not Supported.
+        [HttpGet("status-505")]
+        public ActionResult GetStatus505()
+        {
+            return StatusCode(StatusCodes.Status505HttpVersionNotsupported, "HTTP Version Not Supported");
+        }
+
         // Test 500 Internal Server Error via exception.
         [HttpGet("server-error")]
         public ActionResult GetServerError()

@@ -1,4 +1,6 @@
-<header class="shadow-md p-3 w-full bg-white">
+<header
+  class="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-md transition-shadow duration-200 md:shadow-md"
+>
   <div
     class="flex items-center justify-between gap-6 max-w-screen-2xl mx-auto md:grid md:grid-cols-3 md:gap-6 md:items-center"
   >
@@ -22,8 +24,10 @@
       class="hidden md:flex items-center gap-6 my-2 uppercase text-lg tracking-wide font-medium md:justify-self-center"
     >
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch">Home</a>
-      <a routerLink="/shop" routerLinkActive="active">Shop</a>
-      <a routerLink="/contact" routerLinkActive="active">Contact</a>
+      <a routerLink="/shop" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch"
+        >Shop</a
+      >
+      <a routerLink="/test-error" routerLinkActive="active">Errors</a>
     </nav>
     <div class="flex items-center gap-3 md:justify-self-end">
       <a class="cart-icon" matBadge="5" matBadgeSize="large">
@@ -48,13 +52,18 @@
     <mat-icon>home</mat-icon>
     <span>Home</span>
   </button>
-  <button mat-menu-item routerLink="/shop" routerLinkActive="active">
+  <button
+    mat-menu-item
+    routerLink="/shop"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="exactMatch"
+  >
     <mat-icon>storefront</mat-icon>
     <span>Shop</span>
   </button>
-  <button mat-menu-item routerLink="/contact" routerLinkActive="active">
-    <mat-icon>contact_mail</mat-icon>
-    <span>Contact</span>
+  <button mat-menu-item routerLink="/test-error" routerLinkActive="active">
+    <mat-icon>error_outline</mat-icon>
+    <span>Errors</span>
   </button>
   <mat-divider></mat-divider>
   @if (isLoggedIn) {
