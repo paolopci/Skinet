@@ -30,11 +30,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           router.navigateByUrl('/not-found');
           break;
         case 500:
-          router.navigateByUrl('/server');
+          router.navigateByUrl('/server-error', { state: { error: mapServerError(err) } });
           break;
         case 503:
         case 505:
-          router.navigateByUrl('/server');
+          router.navigateByUrl('/server-error', { state: { error: mapServerError(err) } });
           break;
         case 550:
           snackbar.showError(message ?? 'Errore imprevisto.');
@@ -44,7 +44,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
       }
 
-      return throwError(() => err);  
+      return throwError(() => err);
     }),
   );
 };
@@ -68,4 +68,24 @@ const getErrorMessage = (error: HttpErrorResponse): string | null => {
   }
 
   return null;
+};
+
+const mapServerError = (error: HttpErrorResponse): Record<string, unknown> => {
+  const payload = error.error;
+  const mapped: Record<string, unknown> = {
+    status: error.status,
+    statusText: error.statusText,
+    message: error.message,
+  };
+
+  if (typeof payload === 'string') {
+    mapped['detail'] = payload;
+    return mapped;
+  }
+
+  if (payload && typeof payload === 'object') {
+    return { ...mapped, ...(payload as Record<string, unknown>) };
+  }
+
+  return mapped;
 };
