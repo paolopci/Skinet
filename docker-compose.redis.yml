@@ -1,0 +1,19 @@
+services:
+  redis:
+    image: redis:8.4-alpine
+    container_name: skynet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
+    networks:
+      - mydockernetwork
+
+volumes:
+  redis-data:
+
+networks:
+  mydockernetwork:
+    external: true

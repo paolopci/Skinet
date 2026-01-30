@@ -2,6 +2,8 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using API.Middleware;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+using Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,24 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Add Redis
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ??
+                            throw new Exception("Cannot get Redis connection string");
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "Skinet";
+});
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
+{
+    var configuration = ConfigurationOptions.Parse(redisConnectionString, true);
+
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+builder.Services.AddSingleton<ICartService, CartService>();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
