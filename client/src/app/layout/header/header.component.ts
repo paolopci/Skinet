@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { CartService } from '../../core/services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -10,6 +11,8 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
+  // Accesso ai signals del carrello (badge).
+  cartService = inject(CartService);
   isLoggedIn = false;
   readonly exactMatch = { exact: true };
 }

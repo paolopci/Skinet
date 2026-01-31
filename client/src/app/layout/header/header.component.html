@@ -30,9 +30,11 @@
       <a routerLink="/test-error" routerLinkActive="active">Errors</a>
     </nav>
     <div class="flex items-center gap-3 md:justify-self-end">
+      <!-- Badge con totale pezzi nel carrello -->
       <a
         class="cart-icon"
-        matBadge="5"
+        [matBadge]="cartService.totalItemsCount()"
+        [matBadgeHidden]="cartService.totalItemsCount() === 0"
         matBadgeSize="large"
         routerLink="/cart"
         routerLinkActive="active"

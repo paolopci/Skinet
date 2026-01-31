@@ -5,6 +5,7 @@ import { ShopService } from '../../../core/services/shop.service';
 import { Product } from '../../../shared/models/product';
 import { CurrencyPipe } from '@angular/common';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
+import { CartService } from '../../../core/services/cart.service';
 
 @Component({
   selector: 'app-product-details',
@@ -16,10 +17,13 @@ import { MATERIAL_IMPORTS } from '../../../shared/material';
 export class ProductDetailsComponent implements OnInit {
   private shopService = inject(ShopService);
   private activateRoute = inject(ActivatedRoute);
+  private cartService = inject(CartService);
 
   product = signal<Product | undefined>(undefined);
   isLoading = signal(false);
   errorMessage = signal('');
+  // Quantita selezionata dall'utente.
+  quantity = signal(1);
 
   ngOnInit(): void {
     this.activateRoute.paramMap
@@ -52,5 +56,22 @@ export class ProductDetailsComponent implements OnInit {
         }),
       )
       .subscribe();
+  }
+
+  // Aggiunge al carrello con la quantita corrente.
+  addToCart() {
+    const currentProduct = this.product();
+    if (!currentProduct) {
+      return;
+    }
+
+    this.cartService.addItemToCart(currentProduct, this.quantity());
+  }
+
+  // Normalizza input numerico per evitare valori non validi.
+  onQuantityChange(event: Event) {
+    const value = Number((event.target as HTMLInputElement).value);
+    const normalized = Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
+    this.quantity.set(normalized);
   }
 }
