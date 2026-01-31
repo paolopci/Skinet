@@ -18,6 +18,16 @@ export class CartService {
     () => this.cart()?.items.reduce((total, item) => total + item.quantity, 0) ?? 0,
   );
 
+  // Carica il carrello persistito (se presente) all'avvio dell'app.
+  loadCart() {
+    const cartId = localStorage.getItem(this.cartIdKey);
+    if (!cartId) {
+      return;
+    }
+
+    this.getCart(cartId);
+  }
+
   getCart(id: string) {
     return this.http.get<Cart>(`${this.baseUrl}cart?id=${id}`).subscribe({
       next: (cart) => {
@@ -67,6 +77,49 @@ export class CartService {
     this.setCart(currentCart);
   }
 
+  // Incrementa la quantita di un prodotto esistente.
+  incrementItem(productId: number) {
+    this.changeItemQuantity(productId, 1);
+  }
+
+  // Decrementa la quantita e rimuove l'item se arriva a zero.
+  decrementItem(productId: number) {
+    this.changeItemQuantity(productId, -1);
+  }
+
+  // Imposta una quantita specifica; se 0 rimuove il prodotto.
+  setItemQuantity(productId: number, quantity: number) {
+    const currentCart = this.cart();
+    if (!currentCart) {
+      return;
+    }
+
+    const existingItem = currentCart.items.find((item) => item.productId === productId);
+    if (!existingItem) {
+      return;
+    }
+
+    const normalized = this.normalizeQuantityAllowZero(quantity);
+    if (normalized === 0) {
+      this.removeItem(productId);
+      return;
+    }
+
+    existingItem.quantity = normalized;
+    this.persistCart(currentCart);
+  }
+
+  // Rimuove un prodotto dal carrello.
+  removeItem(productId: number) {
+    const currentCart = this.cart();
+    if (!currentCart) {
+      return;
+    }
+
+    currentCart.items = currentCart.items.filter((item) => item.productId !== productId);
+    this.persistCart(currentCart);
+  }
+
   private createCart() {
     const cart = new Cart();
     this.updateCartState(cart);
@@ -76,7 +129,7 @@ export class CartService {
   private mapProductToCartItem(product: Product, quantity: number): CartItem {
     return {
       productId: product.id,
-      ProductName: product.name,
+      productName: product.name,
       price: product.price,
       quantity,
       pictureUrl: product.pictureUrl,
@@ -92,6 +145,41 @@ export class CartService {
 
     const normalized = Math.floor(quantity);
     return normalized > 0 ? normalized : 1;
+  }
+
+  private normalizeQuantityAllowZero(quantity: number) {
+    if (!Number.isFinite(quantity)) {
+      return 1;
+    }
+
+    const normalized = Math.floor(quantity);
+    return normalized < 0 ? 0 : normalized;
+  }
+
+  private changeItemQuantity(productId: number, delta: number) {
+    const currentCart = this.cart();
+    if (!currentCart) {
+      return;
+    }
+
+    const existingItem = currentCart.items.find((item) => item.productId === productId);
+    if (!existingItem) {
+      return;
+    }
+
+    const newQuantity = existingItem.quantity + delta;
+    if (newQuantity <= 0) {
+      this.removeItem(productId);
+      return;
+    }
+
+    existingItem.quantity = newQuantity;
+    this.persistCart(currentCart);
+  }
+
+  private persistCart(cart: Cart) {
+    this.cart.set(cart);
+    this.setCart(cart);
   }
 
   private updateCartState(cart: Cart | null) {
