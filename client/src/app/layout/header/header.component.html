@@ -44,7 +44,10 @@
       @if (isLoggedIn) {
         <button mat-stroked-button class="hidden md:inline-flex">Logout</button>
       } @else {
-        <button mat-stroked-button class="hidden md:inline-flex">Login</button>
+        <div class="hidden md:flex items-center gap-2">
+          <button mat-stroked-button>Login</button>
+          <button mat-stroked-button>Register</button>
+        </div>
       }
     </div>
   </div>
@@ -83,6 +86,10 @@
     <button mat-menu-item>
       <mat-icon>login</mat-icon>
       <span>Login</span>
+    </button>
+    <button mat-menu-item>
+      <mat-icon>person_add</mat-icon>
+      <span>Register</span>
     </button>
   }
 </mat-menu>
