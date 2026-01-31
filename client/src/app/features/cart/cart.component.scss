@@ -1,0 +1,9 @@
+.no-vertical-scrollbar {
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.no-vertical-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 8px;
+}
