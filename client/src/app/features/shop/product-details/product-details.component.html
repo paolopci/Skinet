@@ -1,45 +1,64 @@
 @if (isLoading()) {
-<p class="text-sm text-slate-500">Caricamento prodotto...</p>
+  <p class="text-sm text-slate-500">Caricamento prodotto...</p>
 } @else if (product()) {
-<section class="py-8">
+  <section class="py-8">
     <div class="max-w-screen-2xl px-4 mx-auto">
-        <div class="mb-6">
-            <a class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900" routerLink="/shop">
-                <mat-icon class="text-base">arrow_back</mat-icon>
-                Torna allo shop
-            </a>
+      <div class="mb-6">
+        <a
+          class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+          routerLink="/shop"
+        >
+          <mat-icon class="text-base">arrow_back</mat-icon>
+          Torna allo shop
+        </a>
+      </div>
+      <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div class="mx-auto w-full max-w-xl">
+          <img class="w-full" src="{{ product()?.pictureUrl }}" alt="product image" />
         </div>
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div class="mx-auto w-full max-w-xl">
-                <img class="w-full" src="{{ product()?.pictureUrl }}" alt="product image" />
-            </div>
 
-            <div>
-                <h1 class="text-2xl font-semibold text-gray-900">{{ product()?.name }}</h1>
-                <div class="mt-4 items-center gap-4 flex">
-                    <p class="text-3xl font-extrabold text-gray-900">
-                        {{ product()?.price | currency }}
-                    </p>
-                </div>
-                <div class="mt-6 mb-6 flex flex-col gap-4 md:flex-row md:items-end">
-                    <button mat-flat-button class="match-input-height w-full md:w-auto">
-                        <mat-icon>shopping_cart</mat-icon>
-                        Add to cart
-                    </button>
-                    <mat-form-field appearance="outline" class="quantity-field w-full md:flex-1"
-                        subscriptSizing="dynamic">
-                        <mat-label>Quantity</mat-label>
-                        <input matInput type="number" />
-                    </mat-form-field>
-                </div>
-                <mat-divider> </mat-divider>
-                <p class="mb-6 text-gray-500">{{ product()?.description }}</p>
-            </div>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">{{ product()?.name }}</h1>
+          <div class="mt-4 items-center gap-4 flex">
+            <p class="text-3xl font-extrabold text-gray-900">
+              {{ product()?.price | currency }}
+            </p>
+          </div>
+          <div class="mt-6 mb-6 flex flex-col gap-4 md:flex-row md:items-end">
+            <!-- Azione di aggiunta al carrello -->
+            <button
+              mat-flat-button
+              class="match-input-height w-full md:w-auto"
+              (click)="addToCart()"
+            >
+              <mat-icon>shopping_cart</mat-icon>
+              Add to cart
+            </button>
+            <!-- Controllo quantita, valido anche su mobile -->
+            <mat-form-field
+              appearance="outline"
+              class="quantity-field w-full md:flex-1"
+              subscriptSizing="dynamic"
+            >
+              <mat-label>Quantity</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                step="1"
+                [value]="quantity()"
+                (input)="onQuantityChange($event)"
+              />
+            </mat-form-field>
+          </div>
+          <mat-divider> </mat-divider>
+          <p class="mb-6 text-gray-500">{{ product()?.description }}</p>
         </div>
+      </div>
     </div>
-</section>
+  </section>
 } @else if (errorMessage()) {
-<p class="text-sm text-red-600">{{ errorMessage() }}</p>
+  <p class="text-sm text-red-600">{{ errorMessage() }}</p>
 } @else {
-<p class="text-sm text-slate-500">Prodotto non disponibile.</p>
+  <p class="text-sm text-slate-500">Prodotto non disponibile.</p>
 }

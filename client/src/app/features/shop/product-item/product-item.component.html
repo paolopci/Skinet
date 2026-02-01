@@ -1,14 +1,19 @@
 <mat-card appearance="raised" tabindex="0">
-    <img [routerLink]="['/shop', product?.id]" src="{{ product?.pictureUrl }}" alt="image of {{ product?.name }}"
-        class="cursor-pointer" />
-    <mat-card-content>
-        <span class="text-sm font-semibold uppercase">{{ product?.name }}</span>
-        <p class="font-ligh">{{ product?.price | currency }}</p>
-        <mat-card-actions>
-            <button mat-stroked-button class="w-full">
-                <mat-icon>add_shopping_cart</mat-icon>
-                Add to cart
-            </button>
-        </mat-card-actions>
-    </mat-card-content>
+  <img
+    [routerLink]="['/shop', product?.id]"
+    src="{{ product?.pictureUrl }}"
+    alt="image of {{ product?.name }}"
+    class="cursor-pointer"
+  />
+  <mat-card-content>
+    <span class="text-sm font-semibold uppercase">{{ product?.name }}</span>
+    <p class="font-ligh">{{ product?.price | currency }}</p>
+    <mat-card-actions>
+      <!-- CTA principale per aggiunta al carrello -->
+      <button mat-stroked-button class="w-full" (click)="addToCart()">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Add to cart
+      </button>
+    </mat-card-actions>
+  </mat-card-content>
 </mat-card>
