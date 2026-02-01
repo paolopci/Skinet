@@ -18,7 +18,12 @@ Applicazione web full-stack con API ASP.NET Core e client Angular 21. Backend co
 ### Procedura di modifica
 1) Analizza il progetto e identifica la modifica da eseguire.
 2) Crea una checklist concettuale (1-7 punti) e presentala prima di procedere, usando indicatori grafici: 🟦 per step aperti e 🟧 ~~...~~ per step completati.
-3) Richiedi conferma per ogni step; se l'utente scrive "si step all", procedi con tutti gli step rimanenti.
+3) Modalita' di selezione checklist: mostra sempre una lista numerata in testo semplice con queste due opzioni:
+   1. Confermi lo STEP <numero dello step>?
+   2. Vuoi fare tutti gli Step assieme?
+   L'utente puo' selezionare solo '1' o '2'. Se l'input non e' valido, mostra un messaggio di errore e riproponi la scelta.
+   - Se l'utente seleziona '1', esegui solo lo step indicato e aggiorna la checklist mostrando solo gli step rimanenti, rinumerati progressivamente.
+   - Se l'utente seleziona '2', esegui tutti gli step rimanenti in una volta sola.
 4) Dopo ogni modifica o uso di tool, valida l'esito in 1-2 frasi e correggi se serve.
 5) Testa e verifica il codice modificato e riformatta i file toccati.
 6) Se compare l'errore "Accesso negato", procedi con permessi elevati.
