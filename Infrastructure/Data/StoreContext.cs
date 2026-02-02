@@ -13,6 +13,15 @@ public class StoreContext(DbContextOptions<StoreContext> options) : IdentityDbCo
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<AppUser>().OwnsOne(user => user.Address, address =>
+        {
+            address.WithOwner();
+            address.Property(a => a.Street).HasMaxLength(200);
+            address.Property(a => a.City).HasMaxLength(100);
+            address.Property(a => a.State).HasMaxLength(100);
+            address.Property(a => a.PostalCode).HasMaxLength(20);
+        });
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductConfiguration).Assembly);
     }
 }

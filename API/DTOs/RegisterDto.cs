@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs;
@@ -18,5 +17,12 @@ public class RegisterDto
     [Required]
     [Compare(nameof(Password))]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    [Required]
+    [Phone]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    [Required]
+    public AddressDto Address { get; set; } = new();
 
 }
