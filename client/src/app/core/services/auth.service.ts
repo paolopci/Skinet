@@ -43,6 +43,12 @@ export class AuthService {
     );
   }
 
+  forgotPassword(email: string): Observable<{ message: string } | void> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}account/forgot-password`, {
+      email,
+    });
+  }
+
   loadFromStorage() {
     this.authState.loadFromStorage();
   }
