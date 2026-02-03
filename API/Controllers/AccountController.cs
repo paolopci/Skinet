@@ -51,7 +51,8 @@ namespace API.Controllers
             var result = await userManager.CreateAsync(user, registerDto.Password);
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                var errors = result.Errors.Select(error => error.Description);
+                return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
             }
 
             return StatusCode(StatusCodes.Status201Created, new
@@ -169,7 +170,8 @@ namespace API.Controllers
             var result = await userManager.ResetPasswordAsync(user, decodedToken, resetPasswordDto.NewPassword);
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                var errors = result.Errors.Select(error => error.Description);
+                return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
             }
 
             return Ok(new { message = "Password aggiornata" });
@@ -200,7 +202,8 @@ namespace API.Controllers
             var result = await userManager.ChangePasswordAsync(user, changePasswordDto.CurrentPassword, changePasswordDto.NewPassword);
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                var errors = result.Errors.Select(error => error.Description);
+                return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
             }
 
             return Ok(new { message = "Password aggiornata" });
@@ -222,7 +225,8 @@ namespace API.Controllers
             var result = await userManager.ConfirmEmailAsync(user, decodedToken);
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                var errors = result.Errors.Select(error => error.Description);
+                return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
             }
 
             return Ok(new { message = "Email verificata" });

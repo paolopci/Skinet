@@ -1,7 +1,8 @@
-﻿using Core.Entities;
+﻿using API.Errors;
+using API.RequestHelpers;
+using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
-using API.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -62,7 +63,10 @@ namespace API.Controllers
         {
             if (model == null)
             {
-                return BadRequest();
+                return BadRequest(new ApiErrorResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Payload prodotto non valido",
+                    null));
             }
 
             var newProduct = new Product
@@ -85,7 +89,10 @@ namespace API.Controllers
         {
             if (model == null)
             {
-                return BadRequest();
+                return BadRequest(new ApiErrorResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Payload prodotto non valido",
+                    null));
             }
 
             if (!ProductExists(id))
