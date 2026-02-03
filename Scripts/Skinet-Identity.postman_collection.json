@@ -536,6 +536,11 @@
                   "});",
                   "pm.test('Admin creato', function () {",
                   "  pm.expect(body.adminEmail).to.eql('paolopci@yahoo.it');",
+                  "});",
+                  "pm.test('Utenti standard creati', function () {",
+                  "  pm.expect(body.users).to.be.an('array');",
+                  "  pm.expect(body.users).to.include('gigi@yahoo.it');",
+                  "  pm.expect(body.users).to.include('carlo@yahoo.it');",
                   "});"
                 ]
               }

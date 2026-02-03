@@ -76,7 +76,58 @@ namespace API.Controllers
                 return BadRequest(new { message = "Assegnazione role Admin fallita", errors });
             }
 
-            return Ok(new { message = "Identity reset completato", adminEmail = adminUser.Email });
+            var standardUsers = new[]
+            {
+                new AppUser
+                {
+                    FirstName = "Gigi",
+                    LastName = "Rossi",
+                    Email = "gigi@yahoo.it",
+                    UserName = "gigi@yahoo.it",
+                    PhoneNumber = "3280000001",
+                    EmailConfirmed = true,
+                    Address = new Address
+                    {
+                        Street = "Via Roma 10",
+                        City = "Milano",
+                        State = "Italia",
+                        PostalCode = "20100"
+                    }
+                },
+                new AppUser
+                {
+                    FirstName = "Carlo",
+                    LastName = "Bianchi",
+                    Email = "carlo@yahoo.it",
+                    UserName = "carlo@yahoo.it",
+                    PhoneNumber = "3280000002",
+                    EmailConfirmed = true,
+                    Address = new Address
+                    {
+                        Street = "Corso Italia 22",
+                        City = "Roma",
+                        State = "Italia",
+                        PostalCode = "00100"
+                    }
+                }
+            };
+
+            foreach (var user in standardUsers)
+            {
+                var createUserResult = await userManager.CreateAsync(user, "Micene@65");
+                if (!createUserResult.Succeeded)
+                {
+                    var errors = string.Join("; ", createUserResult.Errors.Select(error => error.Description));
+                    return BadRequest(new { message = $"Creazione utente {user.Email} fallita", errors });
+                }
+            }
+
+            return Ok(new
+            {
+                message = "Identity reset completato",
+                adminEmail = adminUser.Email,
+                users = standardUsers.Select(user => user.Email).ToArray()
+            });
         }
 
         [Authorize(Roles = "Admin")]
