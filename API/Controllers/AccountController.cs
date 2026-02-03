@@ -125,6 +125,53 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpPost("refresh")]
+        public async Task<ActionResult<UserDto>> Refresh([FromBody] RefreshTokenDto refreshTokenDto)
+        {
+            if (string.IsNullOrWhiteSpace(refreshTokenDto.RefreshToken))
+            {
+                return BadRequest(new ApiErrorResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Refresh token mancante",
+                    null));
+            }
+
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Token non valido",
+                    null));
+            }
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Utente non trovato",
+                    null));
+            }
+
+            return Ok(new UserDto
+            {
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                Token = tokenService.CreateToken(user)
+            });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return Ok(new { message = "Logout effettuato" });
+        }
+
+        [Authorize]
         [HttpGet("address")]
         public async Task<ActionResult<AddressDto>> GetAddress()
         {
