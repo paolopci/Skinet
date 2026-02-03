@@ -3,6 +3,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { SnackbarService } from '../../../core/services/snackbar.service';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
 import { extractValidationErrorMap } from '../../../shared/utils/api-error';
 
@@ -16,6 +17,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly snackbar = inject(SnackbarService);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -23,7 +25,6 @@ export class LoginComponent {
   });
 
   validationErrors: Record<string, string[]> | null = null;
-  authError: string | null = null;
   isSubmitting = false;
   showPassword = false;
 
@@ -39,7 +40,6 @@ export class LoginComponent {
 
     this.isSubmitting = true;
     this.validationErrors = null;
-    this.authError = null;
 
     this.authService.login(this.form.getRawValue()).subscribe({
       next: () => {
@@ -49,7 +49,10 @@ export class LoginComponent {
       },
       error: (error) => {
         this.validationErrors = extractValidationErrorMap(error?.error) ?? null;
-        this.authError = this.getAuthErrorMessage(error);
+        if (this.validationErrors) {
+          this.snackbar.showWarning('Ci sono errori di validazione.');
+        }
+        this.snackbar.showError(this.getAuthErrorMessage(error) ?? 'Si è verificato un errore.');
         this.isSubmitting = false;
       },
     });
