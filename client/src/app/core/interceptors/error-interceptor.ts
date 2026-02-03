@@ -21,6 +21,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
         case 401:
           snackbar.showWarning(message ?? 'Non autorizzato. Effettua il login.');
+          if (!isAuthRoute(router.url)) {
+            router.navigateByUrl(`/login?returnUrl=${encodeURIComponent(router.url)}`);
+          }
           break;
         case 403:
           snackbar.showWarning(message ?? 'Accesso negato.');
@@ -88,4 +91,9 @@ const mapServerError = (error: HttpErrorResponse): Record<string, unknown> => {
   }
 
   return mapped;
+};
+
+const isAuthRoute = (url: string): boolean => {
+  const normalized = url.split('?')[0]?.toLowerCase() ?? '';
+  return normalized === '/login' || normalized === '/register';
 };
