@@ -124,6 +124,91 @@ namespace API.Controllers
             });
         }
 
+        [Authorize]
+        [HttpGet("address")]
+        public async Task<ActionResult<AddressDto>> GetAddress()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Token non valido",
+                    null));
+            }
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Utente non trovato",
+                    null));
+            }
+
+            if (user.Address == null)
+            {
+                return NotFound(new ApiErrorResponse(
+                    StatusCodes.Status404NotFound,
+                    "Indirizzo non trovato",
+                    null));
+            }
+
+            return Ok(new AddressDto
+            {
+                Street = user.Address.Street,
+                City = user.Address.City,
+                State = user.Address.State,
+                PostalCode = user.Address.PostalCode
+            });
+        }
+
+        [Authorize]
+        [HttpPut("address")]
+        public async Task<ActionResult<AddressDto>> UpdateAddress([FromBody] UpdateAddressDto updateAddressDto)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Token non valido",
+                    null));
+            }
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Utente non trovato",
+                    null));
+            }
+
+            user.Address = new Address
+            {
+                Street = updateAddressDto.Street,
+                City = updateAddressDto.City,
+                State = updateAddressDto.State,
+                PostalCode = updateAddressDto.PostalCode
+            };
+
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(error => error.Description);
+                return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
+            }
+
+            return Ok(new AddressDto
+            {
+                Street = user.Address.Street,
+                City = user.Address.City,
+                State = user.Address.State,
+                PostalCode = user.Address.PostalCode
+            });
+        }
+
         [HttpPost("forgot-password")]
         public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
         {
