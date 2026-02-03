@@ -96,12 +96,15 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, refreshToken.ExpiresAt);
 
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(new UserDto
             {
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Token = tokenService.CreateToken(user)
+                Token = jwtToken
             });
         }
 
@@ -127,12 +130,15 @@ namespace API.Controllers
                     null));
             }
 
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(new UserDto
             {
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Token = tokenService.CreateToken(user)
+                Token = jwtToken
             });
         }
 
@@ -177,12 +183,15 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, newToken.ExpiresAt);
 
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(new UserDto
             {
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Token = tokenService.CreateToken(user)
+                Token = jwtToken
             });
         }
 
@@ -210,6 +219,7 @@ namespace API.Controllers
             }
 
             Response.Cookies.Delete(RefreshTokenCookieName);
+            Response.Cookies.Delete("accessToken");
             await signInManager.SignOutAsync();
             return Ok(new { message = "Logout effettuato" });
         }
@@ -225,6 +235,19 @@ namespace API.Controllers
             };
 
             Response.Cookies.Append(RefreshTokenCookieName, token, options);
+        }
+
+        private void SetAccessTokenCookie(string token, DateTime expiresAt)
+        {
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = expiresAt
+            };
+
+            Response.Cookies.Append("accessToken", token, options);
         }
 
         private string? GetIpAddress()
