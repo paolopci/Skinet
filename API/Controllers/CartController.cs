@@ -1,3 +1,4 @@
+using API.Errors;
 using Core.Entities;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,10 @@ namespace API.Controllers
             var updateCart = await cartService.SetCartAsync(cart);
             if (updateCart == null)
             {
-                return BadRequest("Problem with cart.");
+                return BadRequest(new ApiErrorResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Problema con il carrello",
+                    null));
             }
             return Ok(updateCart);
 
@@ -33,7 +37,10 @@ namespace API.Controllers
             var deleted = await cartService.DeleteCartAsync(id);
             if (!deleted)
             {
-                return BadRequest("Problem with cart.");
+                return BadRequest(new ApiErrorResponse(
+                    StatusCodes.Status400BadRequest,
+                    "Problema con il carrello",
+                    null));
             }
             return NoContent();
         }
