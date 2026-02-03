@@ -3,6 +3,7 @@ import { JsonPipe, NgFor, NgIf } from '@angular/common';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { HttpClient } from '@angular/common/http';
 import { extractValidationErrors } from '../../shared/utils/api-error';
+import { environment } from '../../../environments/environment.development';
 
 @Component({
   selector: 'app-test-error',
@@ -12,7 +13,7 @@ import { extractValidationErrors } from '../../shared/utils/api-error';
   styleUrl: './test-error.component.scss',
 })
 export class TestErrorComponent {
-  baseUrl = 'https://localhost:5001/api/';
+  baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   lastError: unknown | null = null;

@@ -41,8 +41,8 @@
       >
         <mat-icon>shopping_cart</mat-icon>
       </a>
-      @if (isLoggedIn) {
-        <button mat-stroked-button class="hidden md:inline-flex">Logout</button>
+      @if (isLoggedIn()) {
+        <button mat-stroked-button class="hidden md:inline-flex" (click)="logout()">Logout</button>
       } @else {
         <div class="hidden md:flex items-center gap-2">
           <button mat-stroked-button routerLink="/login">Login</button>
@@ -77,8 +77,8 @@
     <span>Errors</span>
   </button>
   <mat-divider></mat-divider>
-  @if (isLoggedIn) {
-    <button mat-menu-item>
+  @if (isLoggedIn()) {
+    <button mat-menu-item (click)="logout()">
       <mat-icon>logout</mat-icon>
       <span>Logout</span>
     </button>

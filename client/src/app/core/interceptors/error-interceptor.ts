@@ -20,7 +20,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           }
           break;
         case 401:
-          snackbar.showWarning(message ?? 'Non autorizzato. Effettua il login.');
+          snackbar.showWarning(message ?? 'Sessione scaduta. Effettua di nuovo il login.');
           if (!isAuthRoute(router.url)) {
             router.navigateByUrl(`/login?returnUrl=${encodeURIComponent(router.url)}`);
           }

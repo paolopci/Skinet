@@ -1,4 +1,4 @@
-Macro step in corso: Step 4 - UI Login e Registrazione
+Macro step in corso: Step 6 - Sicurezza e configurazione ambiente
 
 - Step 1 - Allineamento contratti Identity e requisiti client (COMPLETATO)
     1. Raccogli l’elenco completo degli endpoint Identity (register, login, refresh, logout, current-user) e relative route
@@ -20,13 +20,13 @@ Macro step in corso: Step 4 - UI Login e Registrazione
     3. Aggiungi fallback di navigazione in caso di 401 per riportare al login
     4. Integra il recupero `current-user` on app start per ripristino sessione
 
-- Step 4 - UI Login e Registrazione
+- Step 4 - UI Login e Registrazione (COMPLETATO)
     1. Crea componenti `login` e `register` usando Reactive Forms e pattern UI esistenti
     2. Implementa validazioni client e messaggi di errore con `api-error` utilities
     3. Integra snackbar/feedback visivo coerente con Material
     4. Adatta layout per mobile e UX minimale senza modifiche invasive
 
-- Step 5 - Gestione errori e UX di sessione
+- Step 5 - Gestione errori e UX di sessione (COMPLETATO)
     1. Allinea le validation errors del backend alle form con mapping dedicato
     2. Gestisci token scaduti con refresh e messaggio coerente
     3. Mostra stato di autenticazione nel header (login/logout) con signals
