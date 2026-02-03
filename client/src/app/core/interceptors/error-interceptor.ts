@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { SnackbarService } from '../services/snackbar.service';
 import { extractValidationErrorMap } from '../../shared/utils/api-error';
+import { AuthService } from '../services/auth.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -12,6 +13,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       const message = getErrorMessage(err);
+
+      if (err.status === 401) {
+        const authService = inject(AuthService);
+        authService.clearLocalSession();
+      }
 
       switch (err.status) {
         case 400:

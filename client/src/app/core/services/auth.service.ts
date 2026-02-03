@@ -37,6 +37,10 @@ export class AuthService {
     );
   }
 
+  clearLocalSession() {
+    this.authState.clear();
+  }
+
   currentUser(): Observable<AuthUser> {
     return this.http.get<AuthUser>(`${this.baseUrl}account/current-user`).pipe(
       tap((user) => this.authState.setUser(user)),
