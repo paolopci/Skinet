@@ -38,8 +38,8 @@ Macro step in corso: Step 3 - Routing e wiring delle feature Identity
     3. Definisci policy di logout (server + client) e pulizia dati sensibili
     4. Controlla le dipendenze e aggiorna configurazioni minime per Angular 21
 
-- Step 7 - Verifiche e documentazione operativa
+- Step 7 - Verifiche e documentazione operativa (IN CORSO)
     1. Aggiungi test minimi per AuthService e guard (quando presenti)
-    2. Verifica flussi: register, login, refresh, logout, accesso route protette
+    2. Verifica flussi: register, login, refresh, logout, accesso route protette (COMPLETATO: Newman)
     3. Documenta i flussi e gli endpoint usati in un breve README operativo
     4. Valida che loader e snackbar non si sovrappongano ai flussi di login

@@ -1,545 +1,600 @@
 {
-    "info": {
-        "name": "Skinet-Identity",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  "info": {
+    "name": "Skinet-Identity",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "AccountController",
+      "item": [
+        {
+          "name": "Account - register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"{{firstName}}\",\n  \"lastName\": \"{{lastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"confirmPassword\": \"{{userPassword}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"address\": {\n    \"street\": \"{{street}}\",\n    \"city\": \"{{city}}\",\n    \"state\": \"{{state}}\",\n    \"postalCode\": \"{{postalCode}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/account/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201/400\", function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Register ritorna campi utente\", function () {",
+                  "    pm.expect(data.email).to.eql(pm.variables.get(\"userEmail\"));",
+                  "    pm.expect(data.firstName).to.eql(pm.variables.get(\"firstName\"));",
+                  "    pm.expect(data.lastName).to.eql(pm.variables.get(\"lastName\"));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/account/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/401\", function () {",
+                  "  pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Login ritorna token\", function () {",
+                  "    pm.expect(data.token).to.be.a(\"string\").and.not.empty;",
+                  "  });",
+                  "  pm.collectionVariables.set(\"authToken\", data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - login bad password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{badPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/account/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "  pm.expect([401]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - current-user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/current-user"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/401\", function () {",
+                  "  pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Current-user ritorna campi utente\", function () {",
+                  "    pm.expect(data.email).to.eql(pm.variables.get(\"userEmail\"));",
+                  "    pm.expect(data.firstName).to.eql(pm.variables.get(\"firstName\"));",
+                  "    pm.expect(data.lastName).to.eql(pm.variables.get(\"lastName\"));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - get address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/address"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/401/404\", function () {",
+                  "  pm.expect([200, 401, 404]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Address ritorna campi\", function () {",
+                  "    pm.expect(data.street).to.be.a(\"string\");",
+                  "    pm.expect(data.city).to.be.a(\"string\");",
+                  "    pm.expect(data.state).to.be.a(\"string\");",
+                  "    pm.expect(data.postalCode).to.be.a(\"string\");",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - update address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/address",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"{{street}}\",\n  \"city\": \"{{city}}\",\n  \"state\": \"{{state}}\",\n  \"postalCode\": \"{{postalCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/400/401\", function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Update address ritorna campi\", function () {",
+                  "    pm.expect(data.street).to.eql(pm.variables.get(\"street\"));",
+                  "    pm.expect(data.city).to.eql(pm.variables.get(\"city\"));",
+                  "    pm.expect(data.state).to.eql(pm.variables.get(\"state\"));",
+                  "    pm.expect(data.postalCode).to.eql(pm.variables.get(\"postalCode\"));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/forgot-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Messaggio coerente\", function () {",
+                  "  pm.expect(body.message).to.include(\"Se l'email esiste\");",
+                  "});",
+                  "if (body.token) {",
+                  "  pm.collectionVariables.set(\"resetToken\", body.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - reset-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/400\", function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test(\"Messaggio ok\", function () {",
+                  "    pm.expect(body.message).to.include(\"Password aggiornata\");",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - change-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/change-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/400/401\", function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set(\"userPassword\", pm.collectionVariables.get(\"newPassword\"));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - verify-email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/verify-email",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"token\": \"{{verifyToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/400\", function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - send-verify-email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/account/send-verify-email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Messaggio coerente\", function () {",
+                  "  pm.expect(body.message).to.include(\"Se l'email esiste\");",
+                  "});",
+                  "if (body.token) {",
+                  "  pm.collectionVariables.set(\"verifyToken\", body.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - refresh",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/account/refresh"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/401\", function () {",
+                  "  pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account - logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/account/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/204/401\", function () {",
+                  "  pm.expect([200, 204, 401]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const now = new Date();",
+              "const pad = (n) => String(n).padStart(2, '0');",
+              "const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;",
+              "const unique = `test_${stamp}_${Math.random().toString(36).slice(2,8)}@example.com`;",
+              "pm.environment.set('userEmail', unique);"
+            ]
+          }
+        }
+      ]
     },
-    "item": [
+    {
+      "name": "Dev",
+      "item": [
         {
-            "name": "AccountController",
-            "item": [
-                {
-                    "name": "Account - register",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"firstName\": \"{{firstName}}\",\n  \"lastName\": \"{{lastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"confirmPassword\": \"{{userPassword}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"address\": {\n    \"street\": \"{{street}}\",\n    \"city\": \"{{city}}\",\n    \"state\": \"{{state}}\",\n    \"postalCode\": \"{{postalCode}}\"\n  }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "{{baseUrl}}/api/account/register"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 201/400\", function () {",
-                                    "  pm.expect([201, 400]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 201) {",
-                                    "  const data = pm.response.json();",
-                                    "  pm.test(\"Register ritorna campi utente\", function () {",
-                                    "    pm.expect(data.email).to.eql(pm.variables.get(\"userEmail\"));",
-                                    "    pm.expect(data.firstName).to.eql(pm.variables.get(\"firstName\"));",
-                                    "    pm.expect(data.lastName).to.eql(pm.variables.get(\"lastName\"));",
-                                    "  });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - login",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "{{baseUrl}}/api/account/login"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/401\", function () {",
-                                    "  pm.expect([200, 401]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  const data = pm.response.json();",
-                                    "  pm.test(\"Login ritorna token\", function () {",
-                                    "    pm.expect(data.token).to.be.a(\"string\").and.not.empty;",
-                                    "  });",
-                                    "  pm.collectionVariables.set(\"authToken\", data.token);",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - login bad password",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{badPassword}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "{{baseUrl}}/api/account/login"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 401\", function () {",
-                                    "  pm.expect([401]).to.include(pm.response.code);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - current-user",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{authToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/current-user"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/401\", function () {",
-                                    "  pm.expect([200, 401]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  const data = pm.response.json();",
-                                    "  pm.test(\"Current-user ritorna campi utente\", function () {",
-                                    "    pm.expect(data.email).to.eql(pm.variables.get(\"userEmail\"));",
-                                    "    pm.expect(data.firstName).to.eql(pm.variables.get(\"firstName\"));",
-                                    "    pm.expect(data.lastName).to.eql(pm.variables.get(\"lastName\"));",
-                                    "  });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - get address",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{authToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/address"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/401/404\", function () {",
-                                    "  pm.expect([200, 401, 404]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  const data = pm.response.json();",
-                                    "  pm.test(\"Address ritorna campi\", function () {",
-                                    "    pm.expect(data.street).to.be.a(\"string\");",
-                                    "    pm.expect(data.city).to.be.a(\"string\");",
-                                    "    pm.expect(data.state).to.be.a(\"string\");",
-                                    "    pm.expect(data.postalCode).to.be.a(\"string\");",
-                                    "  });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - update address",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{authToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/address",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"street\": \"{{street}}\",\n  \"city\": \"{{city}}\",\n  \"state\": \"{{state}}\",\n  \"postalCode\": \"{{postalCode}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/400/401\", function () {",
-                                    "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  const data = pm.response.json();",
-                                    "  pm.test(\"Update address ritorna campi\", function () {",
-                                    "    pm.expect(data.street).to.eql(pm.variables.get(\"street\"));",
-                                    "    pm.expect(data.city).to.eql(pm.variables.get(\"city\"));",
-                                    "    pm.expect(data.state).to.eql(pm.variables.get(\"state\"));",
-                                    "    pm.expect(data.postalCode).to.eql(pm.variables.get(\"postalCode\"));",
-                                    "  });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - forgot-password",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/forgot-password",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200\", function () {",
-                                    "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});",
-                                    "const body = pm.response.json();",
-                                    "pm.test(\"Messaggio coerente\", function () {",
-                                    "  pm.expect(body.message).to.include(\"Se l'email esiste\");",
-                                    "});",
-                                    "if (body.token) {",
-                                    "  pm.collectionVariables.set(\"resetToken\", body.token);",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - reset-password",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/reset-password",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/400\", function () {",
-                                    "  pm.expect([200, 400]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  const body = pm.response.json();",
-                                    "  pm.test(\"Messaggio ok\", function () {",
-                                    "    pm.expect(body.message).to.include(\"Password aggiornata\");",
-                                    "  });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - change-password",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{authToken}}"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/change-password",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/400/401\", function () {",
-                                    "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
-                                    "});",
-                                    "if (pm.response.code === 200) {",
-                                    "  pm.collectionVariables.set(\"userPassword\", pm.collectionVariables.get(\"newPassword\"));",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - verify-email",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/account/verify-email",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"token\": \"{{verifyToken}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/400\", function () {",
-                                    "  pm.expect([200, 400]).to.include(pm.response.code);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Account - send-verify-email",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "{{baseUrl}}/api/account/send-verify-email"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200\", function () {",
-                                    "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});",
-                                    "const body = pm.response.json();",
-                                    "pm.test(\"Messaggio coerente\", function () {",
-                                    "  pm.expect(body.message).to.include(\"Se l'email esiste\");",
-                                    "});",
-                                    "if (body.token) {",
-                                    "  pm.collectionVariables.set(\"verifyToken\", body.token);",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "Dev",
-            "item": [
-                {
-                    "name": "Dev - reset identity",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": "{{baseUrl}}/api/dev/reset-identity"
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"Status 200/404\", function () {",
-                                    "  pm.expect([200, 404]).to.include(pm.response.code);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
+          "name": "Dev - reset identity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dev/reset-identity"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/404\", function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-    ],
-    "variable": [
-        {
-            "key": "baseUrl",
-            "value": "https://localhost:5001"
-        },
-        {
-            "key": "firstName",
-            "value": "Test"
-        },
-        {
-            "key": "lastName",
-            "value": "User"
-        },
-        {
-            "key": "userEmail",
-            "value": "test.user@skinet.local"
-        },
-        {
-            "key": "userPassword",
-            "value": "Test1234!"
-        },
-        {
-            "key": "badPassword",
-            "value": "Wrong123!"
-        },
-        {
-            "key": "authToken",
-            "value": ""
-        },
-        {
-            "key": "phoneNumber",
-            "value": "+393331112233"
-        },
-        {
-            "key": "street",
-            "value": "Via Roma 10"
-        },
-        {
-            "key": "city",
-            "value": "Milano"
-        },
-        {
-            "key": "state",
-            "value": "MI"
-        },
-        {
-            "key": "postalCode",
-            "value": "20100"
-        },
-        {
-            "key": "resetToken",
-            "value": ""
-        },
-        {
-            "key": "verifyToken",
-            "value": ""
-        },
-        {
-            "key": "newPassword",
-            "value": "Test12345!"
-        }
-    ]
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:5001"
+    },
+    {
+      "key": "firstName",
+      "value": "Test"
+    },
+    {
+      "key": "lastName",
+      "value": "User"
+    },
+    {
+      "key": "userEmail",
+      "value": "test.user@skinet.local"
+    },
+    {
+      "key": "userPassword",
+      "value": "Test1234!"
+    },
+    {
+      "key": "badPassword",
+      "value": "Wrong123!"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "phoneNumber",
+      "value": "+393331112233"
+    },
+    {
+      "key": "street",
+      "value": "Via Roma 10"
+    },
+    {
+      "key": "city",
+      "value": "Milano"
+    },
+    {
+      "key": "state",
+      "value": "MI"
+    },
+    {
+      "key": "postalCode",
+      "value": "20100"
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "verifyToken",
+      "value": ""
+    },
+    {
+      "key": "newPassword",
+      "value": "Test12345!"
+    }
+  ]
 }
