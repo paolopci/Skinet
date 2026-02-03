@@ -36,3 +36,14 @@ mat-card-actions {
     align-items: center;
     padding-top: 12px;
 }
+
+@media (max-width: 600px) {
+    .auth-shell {
+        padding: 32px 12px;
+        align-items: flex-start;
+    }
+
+    .auth-card {
+        padding: 12px 14px 16px;
+    }
+}
