@@ -24,6 +24,11 @@ export class LoginComponent {
 
   validationErrors: Record<string, string[]> | null = null;
   isSubmitting = false;
+  showPassword = false;
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
 
   submit() {
     if (this.form.invalid || this.isSubmitting) {

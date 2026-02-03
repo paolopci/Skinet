@@ -37,6 +37,11 @@ export class RegisterComponent {
 
   validationErrors: Record<string, string[]> | null = null;
   isSubmitting = false;
+  showPasswords = false;
+
+  togglePasswordVisibility() {
+    this.showPasswords = !this.showPasswords;
+  }
 
   submit() {
     if (this.form.invalid || this.isSubmitting) {

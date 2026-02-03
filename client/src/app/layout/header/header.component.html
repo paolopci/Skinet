@@ -45,8 +45,8 @@
         <button mat-stroked-button class="hidden md:inline-flex">Logout</button>
       } @else {
         <div class="hidden md:flex items-center gap-2">
-          <button mat-stroked-button>Login</button>
-          <button mat-stroked-button>Register</button>
+          <button mat-stroked-button routerLink="/login">Login</button>
+          <button mat-stroked-button routerLink="/register">Register</button>
         </div>
       }
     </div>
@@ -83,11 +83,11 @@
       <span>Logout</span>
     </button>
   } @else {
-    <button mat-menu-item>
+    <button mat-menu-item routerLink="/login">
       <mat-icon>login</mat-icon>
       <span>Login</span>
     </button>
-    <button mat-menu-item>
+    <button mat-menu-item routerLink="/register">
       <mat-icon>person_add</mat-icon>
       <span>Register</span>
     </button>
