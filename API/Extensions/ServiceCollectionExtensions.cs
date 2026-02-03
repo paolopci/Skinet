@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<StoreContext>();
 
         var jwtSection = configuration.GetSection("Jwt");

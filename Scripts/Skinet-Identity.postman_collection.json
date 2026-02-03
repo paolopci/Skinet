@@ -526,6 +526,86 @@
                 "exec": [
                   "pm.test(\"Status 200/404\", function () {",
                   "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code !== 200) {",
+                  "  return;",
+                  "}",
+                  "const body = pm.response.json();",
+                  "pm.test('Reset identity messaggio ok', function () {",
+                  "  pm.expect(body.message).to.include('Identity reset completato');",
+                  "});",
+                  "pm.test('Admin creato', function () {",
+                  "  pm.expect(body.adminEmail).to.eql('paolopci@yahoo.it');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dev - login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/account/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Login admin ritorna token\", function () {",
+                  "  pm.expect(data.token).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set(\"authToken\", data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dev - admin check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dev/admin-check"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Admin access ok\", function () {",
+                  "  pm.expect(body.message).to.include('Admin access ok');",
                   "});"
                 ]
               }
@@ -555,6 +635,14 @@
     {
       "key": "userPassword",
       "value": "Test1234!"
+    },
+    {
+      "key": "adminEmail",
+      "value": "paolopci@yahoo.it"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Micene@65"
     },
     {
       "key": "badPassword",

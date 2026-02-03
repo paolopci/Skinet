@@ -96,7 +96,7 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, refreshToken.ExpiresAt);
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
@@ -130,7 +130,7 @@ namespace API.Controllers
                     null));
             }
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
@@ -183,7 +183,7 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, newToken.ExpiresAt);
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
