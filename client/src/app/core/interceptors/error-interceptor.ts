@@ -9,13 +9,13 @@ import { AuthService } from '../services/auth.service';
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const snackbar = inject(SnackbarService);
+  const authService = inject(AuthService);
 
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       const message = getErrorMessage(err);
 
       if (err.status === 401) {
-        const authService = inject(AuthService);
         authService.clearLocalSession();
       }
 
@@ -26,8 +26,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           }
           break;
         case 401:
-          snackbar.showWarning(message ?? 'Sessione scaduta. Effettua di nuovo il login.');
+          // Non mostrare lo snackbar se siamo in una route di autenticazione
+          // Il componente di login/register gestirà l'errore autonomamente
           if (!isAuthRoute(router.url)) {
+            snackbar.showWarning(message ?? 'Sessione scaduta. Effettua di nuovo il login.');
             router.navigateByUrl(`/login?returnUrl=${encodeURIComponent(router.url)}`);
           }
           break;

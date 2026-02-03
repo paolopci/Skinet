@@ -23,6 +23,7 @@ export class LoginComponent {
   });
 
   validationErrors: Record<string, string[]> | null = null;
+  authError: string | null = null;
   isSubmitting = false;
   showPassword = false;
 
@@ -38,6 +39,7 @@ export class LoginComponent {
 
     this.isSubmitting = true;
     this.validationErrors = null;
+    this.authError = null;
 
     this.authService.login(this.form.getRawValue()).subscribe({
       next: () => {
@@ -47,6 +49,7 @@ export class LoginComponent {
       },
       error: (error) => {
         this.validationErrors = extractValidationErrorMap(error?.error) ?? null;
+        this.authError = this.getAuthErrorMessage(error);
         this.isSubmitting = false;
       },
     });
@@ -67,5 +70,54 @@ export class LoginComponent {
     }
 
     return null;
+  }
+
+  private getAuthErrorMessage(error: any): string | null {
+    // Logghiamo l'errore completo per debug se il problema persiste
+    console.error('Dettagli errore login:', error);
+
+    const status = error?.status;
+    const errorData = error?.error;
+
+    // 1. Controllo prioritario sullo stato HTTP
+    if (status == 401) {
+      return 'Email o password non corretti.';
+    }
+
+    // 2. Analisi approfondita del corpo della risposta
+    let message = '';
+    let extractedStatus: any = null;
+
+    if (errorData) {
+      if (typeof errorData === 'object') {
+        // Supportiamo sia camelCase che PascalCase (comune in .NET)
+        message = (errorData.message || errorData.Message || errorData.title || errorData.Title || '').toLowerCase();
+        extractedStatus = errorData.statusCode || errorData.StatusCode || errorData.status || errorData.Status;
+      } else if (typeof errorData === 'string') {
+        message = errorData.toLowerCase();
+      }
+    }
+
+    // Se il corpo indica un 401 o contiene parole chiave sull'autenticazione
+    if (extractedStatus == 401 ||
+      message.includes('credenziali') ||
+      message.includes('password') ||
+      message.includes('unauthorized') ||
+      message.includes('autorizzato') ||
+      message.includes('invalid')) {
+      return 'Email o password non corretti.';
+    }
+
+    // 3. Fallback per status 0 (solo se non abbiamo trovato indizi di 401 sopra)
+    if (status === 0 || !status) {
+      return 'Server non raggiungibile. Riprova più tardi.';
+    }
+
+    // 4. Messaggio di fallback finale
+    const finalMessage = (typeof errorData === 'object' && (errorData.message || errorData.Message))
+      ? (errorData.message || errorData.Message)
+      : 'Si è verificato un errore durante l\'accesso.';
+
+    return finalMessage;
   }
 }

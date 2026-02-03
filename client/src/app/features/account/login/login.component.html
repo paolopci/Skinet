@@ -36,6 +36,10 @@
           </div>
         </div>
 
+        <div class="auth-errors" *ngIf="authError">
+          {{ authError }}
+        </div>
+
         <div class="auth-footer">
           <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
             {{ isSubmitting ? 'Accesso in corso...' : 'Accedi' }}

@@ -1,4 +1,4 @@
-Macro step in corso: Step 6 - Sicurezza e configurazione ambiente
+Macro step in corso: Step 7 - Verifiche e documentazione operativa
 
 - Step 1 - Allineamento contratti Identity e requisiti client (COMPLETATO)
     1. Raccogli l’elenco completo degli endpoint Identity (register, login, refresh, logout, current-user) e relative route
@@ -32,14 +32,14 @@ Macro step in corso: Step 6 - Sicurezza e configurazione ambiente
     3. Mostra stato di autenticazione nel header (login/logout) con signals
     4. Aggiungi schermate/CTA per accesso negato e sessione scaduta
 
-- Step 6 - Sicurezza e configurazione ambiente
+- Step 6 - Sicurezza e configurazione ambiente (COMPLETATO)
     1. Centralizza gli endpoint API in environment e evita URL hardcoded
     2. Se usi cookie, gestisci CORS e `withCredentials`
     3. Definisci policy di logout (server + client) e pulizia dati sensibili
     4. Controlla le dipendenze e aggiorna configurazioni minime per Angular 21
 
-- Step 7 - Verifiche e documentazione operativa (IN CORSO)
+- Step 7 - Verifiche e documentazione operativa (COMPLETATO)
     1. Aggiungi test minimi per AuthService e guard (quando presenti)
     2. Verifica flussi: register, login, refresh, logout, accesso route protette (COMPLETATO: Newman)
-    3. Documenta i flussi e gli endpoint usati in un breve README operativo
+    3. Documenta i flussi e gli endpoint usati in un breve README operativo (COMPLETATO)
     4. Valida che loader e snackbar non si sovrappongano ai flussi di login
