@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Core.Entities;
 using Core.Interfaces;
@@ -45,5 +46,39 @@ public class TokenService(IConfiguration config) : ITokenService
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
+    }
+
+    public (RefreshToken refreshToken, string rawToken) CreateRefreshToken(AppUser user, string? ipAddress, string? userAgent)
+    {
+        var refreshDays = GetRefreshTokenDays();
+        var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+        var refreshToken = new RefreshToken
+        {
+            TokenHash = HashToken(rawToken),
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(refreshDays),
+            CreatedByIp = ipAddress,
+            UserAgent = userAgent,
+            UserId = user.Id
+        };
+
+        return (refreshToken, rawToken);
+    }
+
+    public string HashToken(string token)
+    {
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    private int GetRefreshTokenDays()
+    {
+        var configured = config["Jwt:RefreshTokenDays"];
+        if (int.TryParse(configured, out var days) && days > 0)
+        {
+            return days;
+        }
+
+        return 14;
     }
 }
