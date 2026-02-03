@@ -1,0 +1,38 @@
+.auth-shell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 16px;
+}
+
+.auth-card {
+    width: min(420px, 100%);
+    padding: 16px 20px 20px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.auth-errors {
+    background: #fff3f3;
+    border: 1px solid #ffd6d6;
+    color: #9b1c1c;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.auth-error {
+    margin: 2px 0;
+}
+
+mat-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 12px;
+}
