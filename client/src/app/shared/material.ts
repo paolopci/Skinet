@@ -8,7 +8,7 @@ import { MatSelectionList, MatListOption } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatFormField, MatLabel } from '@angular/material/select';
+import { MatFormField, MatLabel, MatError, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
 // prettier-ignore
@@ -28,6 +28,8 @@ const MATERIAL_IMPORTS = [
     MatPaginator,
     MatFormField,
     MatLabel,
+    MatError,
+    MatSuffix,
     MatCardTitle
 ];
 const SNACKBAR_PANEL_CLASSES = {

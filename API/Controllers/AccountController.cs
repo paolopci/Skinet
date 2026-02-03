@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Security.Claims;
 
@@ -20,6 +21,7 @@ namespace API.Controllers
         IEmailSender emailSender,
         IWebHostEnvironment env) : BaseApiController
     {
+        private const string RefreshTokenCookieName = "refreshToken";
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto registerDto)
         {
@@ -55,6 +57,11 @@ namespace API.Controllers
                 return BadRequest(ApiValidationErrorResponse.FromIdentityErrors(errors));
             }
 
+            var (refreshToken, rawToken) = tokenService.CreateRefreshToken(user, GetIpAddress(), Request.Headers.UserAgent.ToString());
+            user.RefreshTokens.Add(refreshToken);
+            await userManager.UpdateAsync(user);
+            SetRefreshTokenCookie(rawToken, refreshToken.ExpiresAt);
+
             return StatusCode(StatusCodes.Status201Created, new
             {
                 user.Email,
@@ -84,12 +91,20 @@ namespace API.Controllers
                     null));
             }
 
+            var (refreshToken, rawToken) = tokenService.CreateRefreshToken(user, GetIpAddress(), Request.Headers.UserAgent.ToString());
+            user.RefreshTokens.Add(refreshToken);
+            await userManager.UpdateAsync(user);
+            SetRefreshTokenCookie(rawToken, refreshToken.ExpiresAt);
+
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(new UserDto
             {
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Token = tokenService.CreateToken(user)
+                Token = jwtToken
             });
         }
 
@@ -115,13 +130,134 @@ namespace API.Controllers
                     null));
             }
 
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(new UserDto
             {
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Token = tokenService.CreateToken(user)
+                Token = jwtToken
             });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<UserDto>> Refresh()
+        {
+            var refreshToken = Request.Cookies[RefreshTokenCookieName];
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Refresh token mancante",
+                    null));
+            }
+
+            var hashedToken = tokenService.HashToken(refreshToken);
+            var user = await userManager.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.TokenHash == hashedToken));
+
+            if (user == null)
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Refresh token non valido",
+                    null));
+            }
+
+            var storedToken = user.RefreshTokens.First(t => t.TokenHash == hashedToken);
+            if (!storedToken.IsActive)
+            {
+                return Unauthorized(new ApiErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    "Refresh token scaduto o revocato",
+                    null));
+            }
+
+            var (newToken, rawToken) = tokenService.CreateRefreshToken(user, GetIpAddress(), Request.Headers.UserAgent.ToString());
+            storedToken.RevokedAt = DateTime.UtcNow;
+            storedToken.ReplacedByTokenHash = newToken.TokenHash;
+            user.RefreshTokens.Add(newToken);
+            await userManager.UpdateAsync(user);
+            SetRefreshTokenCookie(rawToken, newToken.ExpiresAt);
+
+            var jwtToken = tokenService.CreateToken(user);
+            SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
+
+            return Ok(new UserDto
+            {
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                Token = jwtToken
+            });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ActionResult> Logout()
+        {
+            var refreshToken = Request.Cookies[RefreshTokenCookieName];
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                var hashedToken = tokenService.HashToken(refreshToken);
+                var user = await userManager.Users
+                    .Include(u => u.RefreshTokens)
+                    .FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.TokenHash == hashedToken));
+
+                if (user != null)
+                {
+                    var storedToken = user.RefreshTokens.FirstOrDefault(t => t.TokenHash == hashedToken);
+                    if (storedToken != null && storedToken.RevokedAt == null)
+                    {
+                        storedToken.RevokedAt = DateTime.UtcNow;
+                        await userManager.UpdateAsync(user);
+                    }
+                }
+            }
+
+            Response.Cookies.Delete(RefreshTokenCookieName);
+            Response.Cookies.Delete("accessToken");
+            await signInManager.SignOutAsync();
+            return Ok(new { message = "Logout effettuato" });
+        }
+
+        private void SetRefreshTokenCookie(string token, DateTime expiresAt)
+        {
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = expiresAt
+            };
+
+            Response.Cookies.Append(RefreshTokenCookieName, token, options);
+        }
+
+        private void SetAccessTokenCookie(string token, DateTime expiresAt)
+        {
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = expiresAt
+            };
+
+            Response.Cookies.Append("accessToken", token, options);
+        }
+
+        private string? GetIpAddress()
+        {
+            if (Request.Headers.TryGetValue("X-Forwarded-For", out var forwarded))
+            {
+                return forwarded.ToString();
+            }
+
+            return HttpContext.Connection.RemoteIpAddress?.ToString();
         }
 
         [Authorize]

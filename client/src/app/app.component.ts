@@ -7,6 +7,7 @@ import { MatProgressBar } from '@angular/material/progress-bar';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CartService } from './core/services/cart.service';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -20,12 +21,19 @@ export class AppComponent {
   private readonly loadingService = inject(LoadingService);
   private readonly router = inject(Router);
   private readonly cartService = inject(CartService);
+  private readonly authService = inject(AuthService);
   readonly loading$ = this.loadingService.loading$;
   private readonly currentUrl = signal(this.router.url);
   readonly isShopRoute = computed(() => this.currentUrl().startsWith('/shop'));
 
   constructor() {
     this.cartService.loadCart();
+    this.authService.loadFromStorage();
+    this.authService.currentUser().subscribe({
+      error: () => {
+        // Se il token non è valido, lo stato viene ripulito dall'interceptor.
+      },
+    });
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),

@@ -84,6 +84,20 @@ public static class ServiceCollectionExtensions
                     ValidAudience = jwtSection["Audience"],
                     ClockSkew = TimeSpan.FromMinutes(2)
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Cookies["accessToken"];
+                        if (!string.IsNullOrWhiteSpace(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization();
@@ -99,7 +113,8 @@ public static class ServiceCollectionExtensions
             {
                 policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 
