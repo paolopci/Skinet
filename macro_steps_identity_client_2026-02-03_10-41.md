@@ -1,4 +1,4 @@
-Macro step in corso: Step 3 - Routing e wiring delle feature Identity
+Macro step in corso: Step 4 - UI Login e Registrazione
 
 - Step 1 - Allineamento contratti Identity e requisiti client (COMPLETATO)
     1. Raccogli l’elenco completo degli endpoint Identity (register, login, refresh, logout, current-user) e relative route
@@ -14,7 +14,7 @@ Macro step in corso: Step 3 - Routing e wiring delle feature Identity
     4. Aggiungi un auth interceptor per allegare il token alle richieste protette
     5. Inserisci un guard per route protette (es. checkout) e una redirect policy post-login
 
-- Step 3 - Routing e wiring delle feature Identity (IN CORSO)
+- Step 3 - Routing e wiring delle feature Identity (COMPLETATO)
     1. Introduci un feature module/area `features/account` con route `login` e `register`
     2. Configura le rotte in `app.routes.ts` mantenendo la struttura esistente
     3. Aggiungi fallback di navigazione in caso di 401 per riportare al login

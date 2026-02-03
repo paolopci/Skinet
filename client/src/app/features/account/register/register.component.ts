@@ -1,10 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
 import { extractValidationErrorMap } from '../../../shared/utils/api-error';
+
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+const phonePattern = /^[0-9+()\s-]{6,}$/;
 
 @Component({
   selector: 'app-register',
@@ -21,8 +24,8 @@ export class RegisterComponent {
     firstName: ['', [Validators.required]],
     lastName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
-    phoneNumber: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    phoneNumber: ['', [Validators.required, Validators.pattern(phonePattern)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(passwordPattern)]],
     confirmPassword: ['', [Validators.required]],
     address: this.fb.nonNullable.group({
       street: ['', [Validators.required]],
@@ -30,7 +33,7 @@ export class RegisterComponent {
       state: ['', [Validators.required]],
       postalCode: ['', [Validators.required]],
     }),
-  });
+  }, { validators: matchPasswords('password', 'confirmPassword') });
 
   validationErrors: Record<string, string[]> | null = null;
   isSubmitting = false;
@@ -70,8 +73,20 @@ export class RegisterComponent {
       return 'Email non valida.';
     }
 
+    if (controlName === 'phoneNumber' && control.hasError('pattern')) {
+      return 'Numero di telefono non valido.';
+    }
+
     if (controlName === 'password' && control.hasError('minlength')) {
       return 'La password deve avere almeno 8 caratteri.';
+    }
+
+    if (controlName === 'password' && control.hasError('pattern')) {
+      return 'La password deve includere maiuscola, minuscola e numero.';
+    }
+
+    if (controlName === 'confirmPassword' && (control.hasError('passwordMismatch') || this.form.hasError('passwordMismatch'))) {
+      return 'Le password non coincidono.';
     }
 
     return null;
@@ -90,3 +105,26 @@ export class RegisterComponent {
     return null;
   }
 }
+
+const matchPasswords = (passwordKey: string, confirmKey: string): ValidatorFn =>
+  (group: AbstractControl) => {
+    const password = group.get(passwordKey);
+    const confirm = group.get(confirmKey);
+
+    if (!password || !confirm) {
+      return null;
+    }
+
+    if (password.value !== confirm.value) {
+      const errors = { ...(confirm.errors ?? {}), passwordMismatch: true };
+      confirm.setErrors(errors);
+      return { passwordMismatch: true };
+    }
+
+    if (confirm.hasError('passwordMismatch')) {
+      const { passwordMismatch, ...rest } = confirm.errors ?? {};
+      confirm.setErrors(Object.keys(rest).length ? rest : null);
+    }
+
+    return null;
+  };
