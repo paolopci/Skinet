@@ -4,6 +4,7 @@ import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { AuthUser, LoginRequest, RefreshRequest, RegisterRequest } from '../../shared/models/auth';
 import { AuthStateService } from './auth-state.service';
+import { CartService } from './cart.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,8 @@ export class AuthService {
   private readonly baseUrl = environment.apiUrl;
   private readonly http = inject(HttpClient);
   private readonly authState = inject(AuthStateService);
+  private readonly cartService = inject(CartService);
+  private readonly cartIdKey = 'cart_id';
 
   register(payload: RegisterRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}account/register`, payload).pipe(
@@ -21,19 +24,27 @@ export class AuthService {
 
   login(payload: LoginRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}account/login`, payload).pipe(
-      tap((user) => this.authState.setUser(user)),
+      tap((user) => {
+        this.authState.setUser(user);
+        this.mergeGuestCart();
+      }),
     );
   }
 
   refresh(payload: RefreshRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}account/refresh`, payload).pipe(
-      tap((user) => this.authState.setUser(user)),
+      tap((user) => {
+        this.authState.setUser(user);
+        this.mergeGuestCart();
+      }),
     );
   }
 
   logout(): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}account/logout`, {}).pipe(
-      tap(() => this.authState.clear()),
+      tap(() => {
+        this.authState.clear();
+      }),
     );
   }
 
@@ -55,5 +66,14 @@ export class AuthService {
 
   loadFromStorage() {
     this.authState.loadFromStorage();
+  }
+
+  private mergeGuestCart() {
+    const guestCartId = localStorage.getItem(this.cartIdKey);
+    if (!guestCartId) {
+      return;
+    }
+
+    this.cartService.mergeCart(guestCartId);
   }
 }

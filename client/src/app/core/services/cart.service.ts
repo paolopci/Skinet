@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment.development';
 import { HttpClient } from '@angular/common/http';
 import { Cart, CartItem } from '../../shared/models/cart';
 import { Product } from '../../shared/models/product';
+import { SnackbarService } from './snackbar.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +12,7 @@ export class CartService {
   private readonly cartIdKey = 'cart_id';
   baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
+  private snackbar = inject(SnackbarService);
 
   cart = signal<Cart | null>(null);
   // Totale pezzi nel carrello (somma delle quantita per item).
@@ -59,6 +61,20 @@ export class CartService {
         console.log(error);
       },
     });
+  }
+
+  mergeCart(guestCartId: string) {
+    return this.http
+      .post<Cart>(`${this.baseUrl}cart/merge`, { guestCartId })
+      .subscribe({
+        next: (updatedCart) => {
+          this.updateCartState(updatedCart);
+          this.snackbar.showInfo('Carrello sincronizzato');
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
   }
 
   // Aggiunge o incrementa un item, poi sincronizza con API.
