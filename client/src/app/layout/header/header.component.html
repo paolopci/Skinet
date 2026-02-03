@@ -7,7 +7,7 @@
     <div class="flex items-center gap-3 md:justify-self-start">
       <button
         mat-icon-button
-        class="md:hidden"
+        class="lg:hidden"
         [matMenuTriggerFor]="mobileMenu"
         aria-label="Apri menu"
       >
@@ -21,7 +21,7 @@
       />
     </div>
     <nav
-      class="hidden md:flex items-center gap-6 my-2 uppercase text-lg tracking-wide font-medium md:justify-self-center"
+      class="hidden lg:flex items-center gap-6 my-2 uppercase text-lg tracking-wide font-medium lg:justify-self-center"
     >
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch">Home</a>
       <a routerLink="/shop" routerLinkActive="active" [routerLinkActiveOptions]="exactMatch"
@@ -42,7 +42,16 @@
         <mat-icon>shopping_cart</mat-icon>
       </a>
       @if (isLoggedIn()) {
-        <button mat-stroked-button class="hidden md:inline-flex" (click)="logout()">Logout</button>
+        <button
+          mat-stroked-button
+          class="user-menu-trigger items-center gap-2"
+          [matMenuTriggerFor]="userMenu"
+          aria-label="Apri menu utente"
+        >
+          <mat-icon>person</mat-icon>
+          <span class="max-w-[160px] truncate">{{ user()?.email ?? 'Account' }}</span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
       } @else {
         <div class="hidden md:flex items-center gap-2">
           <button mat-stroked-button routerLink="/login">Login</button>
@@ -52,6 +61,22 @@
     </div>
   </div>
 </header>
+
+<mat-menu #userMenu="matMenu">
+  <button mat-menu-item routerLink="/cart">
+    <mat-icon>shopping_cart</mat-icon>
+    <span>My cart</span>
+  </button>
+  <button mat-menu-item disabled>
+    <mat-icon>receipt_long</mat-icon>
+    <span>My orders</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>
 
 <mat-menu #mobileMenu="matMenu" panelClass="mobile-menu">
   <button
@@ -78,6 +103,15 @@
   </button>
   <mat-divider></mat-divider>
   @if (isLoggedIn()) {
+    <button mat-menu-item routerLink="/cart">
+      <mat-icon>shopping_cart</mat-icon>
+      <span>My cart</span>
+    </button>
+    <button mat-menu-item disabled>
+      <mat-icon>receipt_long</mat-icon>
+      <span>My orders</span>
+    </button>
+    <mat-divider></mat-divider>
     <button mat-menu-item (click)="logout()">
       <mat-icon>logout</mat-icon>
       <span>Logout</span>

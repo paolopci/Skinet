@@ -20,6 +20,7 @@ export class HeaderComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   readonly isLoggedIn = this.authState.isAuthenticated;
+  readonly user = this.authState.user;
   readonly exactMatch = { exact: true };
 
   logout() {

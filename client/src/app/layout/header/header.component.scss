@@ -27,3 +27,13 @@ nav a.active {
   color: #7d007d;
 }
 
+.user-menu-trigger {
+  display: inline-flex;
+}
+
+@media (max-width: 1023px) {
+  .user-menu-trigger {
+    display: none !important;
+  }
+}
+
