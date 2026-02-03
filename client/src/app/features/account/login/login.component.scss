@@ -30,6 +30,27 @@
     margin: 2px 0;
 }
 
+.auth-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.auth-link {
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.password-toggle {
+    opacity: 0.75;
+}
+
+.password-toggle:hover {
+    opacity: 1;
+}
+
 mat-card-actions {
     display: flex;
     gap: 8px;

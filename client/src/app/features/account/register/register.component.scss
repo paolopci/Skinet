@@ -42,6 +42,14 @@
     margin: 2px 0;
 }
 
+.password-toggle {
+    opacity: 0.75;
+}
+
+.password-toggle:hover {
+    opacity: 1;
+}
+
 mat-card-actions {
     display: flex;
     gap: 8px;

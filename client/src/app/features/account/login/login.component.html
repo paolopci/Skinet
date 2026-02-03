@@ -21,6 +21,7 @@
             type="button"
             mat-icon-button
             matSuffix
+            class="password-toggle"
             aria-label="Mostra o nascondi password"
             (click)="togglePasswordVisibility()"
           >
@@ -35,9 +36,12 @@
           </div>
         </div>
 
-        <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
-          {{ isSubmitting ? 'Accesso in corso...' : 'Accedi' }}
-        </button>
+        <div class="auth-footer">
+          <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Accesso in corso...' : 'Accedi' }}
+          </button>
+          <a class="auth-link" routerLink="/forgot-password">Password dimenticata?</a>
+        </div>
       </form>
     </mat-card-content>
     <mat-card-actions>
