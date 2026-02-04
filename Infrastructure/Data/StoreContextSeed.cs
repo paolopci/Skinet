@@ -31,6 +31,20 @@ namespace Infrastructure.Data
                 await context.SaveChangesAsync();
             }
 
+            if (!context.DeliveryMethods.Any())
+            {
+                var deliveryMethodsData = await File.ReadAllTextAsync("../Infrastructure/Data/SeedData/delivery.json");
+                var deliveryMethods = JsonSerializer.Deserialize<List<DeliveryMethod>>(deliveryMethodsData);
+
+                if (deliveryMethods == null)
+                {
+                    return;
+                }
+
+                context.DeliveryMethods.AddRange(deliveryMethods);
+                await context.SaveChangesAsync();
+            }
+
             var adminSection = configuration.GetSection("AdminSeed");
             var adminEmail = adminSection["Email"];
             var adminPassword = adminSection["Password"];
