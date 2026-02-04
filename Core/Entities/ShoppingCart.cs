@@ -8,5 +8,10 @@ namespace Core.Entities
         public required string Id { get; set; }
 
         public List<CartItem> Items { get; set; } = [];
+
+        // for Stripe Payment
+        public int? DeliverMethodId { get; set; }
+        public string? ClientSecret { get; set; }
+        public string? PaymentIntentId { get; set; }
     }
 }
