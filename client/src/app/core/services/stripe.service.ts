@@ -28,6 +28,7 @@ export class StripeService {
   private stripePromise: Promise<Stripe | null> | null = null;
   private elements?: StripeElements;
   private addressElement?: StripeAddressElement;
+  private lastUserEmail?: string;
 
   private getPublicKey(): string {
     if (!this.publicKey) {
@@ -50,6 +51,7 @@ export class StripeService {
 
   async initializeElements() {
     if (!this.elements) {
+      this.ensureUserContext();
       const stripe = await this.getStripe();
       if (stripe) {
         const cart = await firstValueFrom(this.createOrUpdatePaymentIntent());
@@ -64,7 +66,22 @@ export class StripeService {
     return this.elements;
   }
 
+  private ensureUserContext() {
+    const currentEmail = this.authState.user()?.email ?? null;
+    if (this.lastUserEmail !== currentEmail) {
+      this.resetStripeSession();
+      this.lastUserEmail = currentEmail ?? undefined;
+    }
+  }
+
+  private resetStripeSession() {
+    this.elements = undefined;
+    this.addressElement = undefined;
+    this.stripePromise = null;
+  }
+
   async createAddressElement() {
+    this.ensureUserContext();
     if (!this.addressElement) {
       const elements = await this.initializeElements();
       if (elements) {

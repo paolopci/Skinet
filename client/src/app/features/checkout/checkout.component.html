@@ -9,8 +9,18 @@
         </div>
       </mat-step>
 
-      <mat-step label="Shipping"> Delivery form </mat-step>
-      <mat-step label="Payment"> Payment form </mat-step>
+      <mat-step label="Shipping">
+        <div class="flex justify-between mt-6">
+          <button mat-stroked-button matStepperPrevious>Back</button>
+          <button mat-flat-button matStepperNext>Next</button>
+        </div>
+      </mat-step>
+      <mat-step label="Payment">
+        <div class="flex justify-between mt-6">
+          <button mat-stroked-button matStepperPrevious>Back</button>
+          <button mat-flat-button matStepperNext>Next</button>
+        </div>
+      </mat-step>
       <mat-step label="Confirmation"> Review form </mat-step>
     </mat-stepper>
   </div>
