@@ -10,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatFormField, MatLabel, MatError, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatStepperModule } from '@angular/material/stepper';
 
 // prettier-ignore
 const MATERIAL_IMPORTS = [
@@ -30,7 +31,8 @@ const MATERIAL_IMPORTS = [
     MatLabel,
     MatError,
     MatSuffix,
-    MatCardTitle
+    MatCardTitle,
+    MatStepperModule
 ];
 const SNACKBAR_PANEL_CLASSES = {
     error: 'snackbar-error',

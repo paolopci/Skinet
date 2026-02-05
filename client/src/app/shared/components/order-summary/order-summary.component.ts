@@ -13,4 +13,5 @@ export class OrderSummaryComponent {
   @Input() discount = 0;
   @Input() shippingCost = 0;
   @Input() orderTotal = 0;
+  @Input() showCheckoutCta = true;
 }
