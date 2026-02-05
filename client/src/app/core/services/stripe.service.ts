@@ -11,6 +11,8 @@ import { CartService } from './cart.service';
 import { HttpClient } from '@angular/common/http';
 import { Cart } from '../../shared/models/cart';
 import { firstValueFrom, map } from 'rxjs';
+import { AccountService } from './account.service';
+import { AuthStateService } from './auth-state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +20,8 @@ import { firstValueFrom, map } from 'rxjs';
 export class StripeService {
   baseUrl = environment.apiUrl;
   private cartService = inject(CartService);
+  private accountService = inject(AccountService);
+  private authState = inject(AuthStateService);
   private http = inject(HttpClient);
 
   private readonly publicKey = environment.stripePublicKey?.trim();
@@ -67,6 +71,33 @@ export class StripeService {
         const options: StripeAddressElementOptions = {
           mode: 'shipping',
         };
+        const user = this.authState.user();
+        if (user?.firstName || user?.lastName) {
+          options.defaultValues = {
+            ...(options.defaultValues ?? {}),
+            firstName: user?.firstName ?? null,
+            lastName: user?.lastName ?? null,
+          };
+          options.display = {
+            ...(options.display ?? {}),
+            name: 'split',
+          };
+        }
+        try {
+          const address = await firstValueFrom(this.accountService.getAddress());
+          options.defaultValues = {
+            ...(options.defaultValues ?? {}),
+            address: {
+              line1: address.street,
+              city: address.city,
+              state: address.state,
+              postal_code: address.postalCode,
+              country: 'IT',
+            },
+          };
+        } catch {
+          // Nessun indirizzo salvato, manteniamo il form vuoto.
+        }
         this.addressElement = elements.create('address', options);
       } else {
         throw new Error('Elements instance has not been loaded');

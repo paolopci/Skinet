@@ -18,7 +18,7 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   loading.show();
 
   return next(req).pipe(
-    delay(500),
+    // delay(500),
     finalize(() => {
       loading.hide();
     }),

@@ -5,6 +5,7 @@ import { CartService } from '../../core/services/cart.service';
 import { StripeService } from '../../core/services/stripe.service';
 import { StripeAddressElement } from '@stripe/stripe-js';
 import { SnackbarService } from '../../core/services/snackbar.service';
+import { MatStepper } from '@angular/material/stepper';
 
 @Component({
   selector: 'app-checkout',
@@ -37,5 +38,26 @@ export class CheckoutComponent implements OnInit {
       const message = error instanceof Error ? error.message : 'Errore inatteso.';
       this.snackbar.showError(message);
     }
+  }
+
+  async goToShipping(stepper: MatStepper) {
+    if (!this.addressElement) {
+      this.snackbar.showError('Indirizzo non disponibile.');
+      return;
+    }
+
+    try {
+      const { complete } = await this.addressElement.getValue();
+      if (!complete) {
+        this.snackbar.showError('Completa tutti i campi obbligatori dell’indirizzo.');
+        return;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Errore inatteso.';
+      this.snackbar.showError(message);
+      return;
+    }
+
+    stepper.next();
   }
 }

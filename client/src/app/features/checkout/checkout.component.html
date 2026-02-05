@@ -5,7 +5,7 @@
         <div id="address-element"></div>
         <div class="flex justify-between mt-6">
           <button routerLink="/shop" mat-stroked-button>Continue shopping</button>
-          <button matStepperNext mat-flat-button>Next</button>
+          <button mat-flat-button (click)="goToShipping(stepper)">Next</button>
         </div>
       </mat-step>
 
