@@ -55,10 +55,14 @@ namespace API.Controllers
                 EmailConfirmed = true,
                 Address = new Address
                 {
-                    Street = "Via del Canarino 5",
+                    FirstName = "Paolo",
+                    LastName = "Paci",
+                    AddressLine1 = "Via del Canarino 5",
+                    AddressLine2 = null,
                     City = "Pesaro",
-                    State = "Italia",
-                    PostalCode = "61122"
+                    PostalCode = "61122",
+                    CountryCode = "IT",
+                    Region = "PU"
                 }
             };
 
@@ -88,10 +92,14 @@ namespace API.Controllers
                     EmailConfirmed = true,
                     Address = new Address
                     {
-                        Street = "Via Roma 10",
+                        FirstName = "Gigi",
+                        LastName = "Rossi",
+                        AddressLine1 = "Via Roma 10",
+                        AddressLine2 = null,
                         City = "Milano",
-                        State = "Italia",
-                        PostalCode = "20100"
+                        PostalCode = "20100",
+                        CountryCode = "IT",
+                        Region = "MI"
                     }
                 },
                 new AppUser
@@ -104,10 +112,14 @@ namespace API.Controllers
                     EmailConfirmed = true,
                     Address = new Address
                     {
-                        Street = "Corso Italia 22",
+                        FirstName = "Carlo",
+                        LastName = "Bianchi",
+                        AddressLine1 = "Corso Italia 22",
+                        AddressLine2 = null,
                         City = "Roma",
-                        State = "Italia",
-                        PostalCode = "00100"
+                        PostalCode = "00100",
+                        CountryCode = "IT",
+                        Region = "RM"
                     }
                 }
             };
