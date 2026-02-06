@@ -2,14 +2,15 @@
   "info": {
     "name": "Skinet - Payments",
     "_postman_id": "f39de4d2-2d77-4cca-b5cc-0f90f3b8bdb3",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test flussi Payments. Sequenza raccomandata: Setup -> Happy Path -> Negative Path -> Cleanup."
   },
   "item": [
     {
       "name": "Setup",
       "item": [
         {
-          "name": "Account - Login",
+          "name": "Setup - 1 Account - Login",
           "request": {
             "method": "POST",
             "header": [
@@ -59,7 +60,7 @@
           ]
         },
         {
-          "name": "Cart - Update Cart (small price)",
+          "name": "Setup - 2 Cart - Update Cart (small price)",
           "request": {
             "method": "POST",
             "header": [
@@ -108,7 +109,7 @@
           ]
         },
         {
-          "name": "Payments - Get Delivery Methods",
+          "name": "Setup - 3 Payments - Get Delivery Methods",
           "request": {
             "method": "GET",
             "header": [],
@@ -146,7 +147,7 @@
           ]
         },
         {
-          "name": "Cart - Update Cart with DeliveryMethod",
+          "name": "Setup - 4 Cart - Update Cart with DeliveryMethod",
           "request": {
             "method": "POST",
             "header": [
@@ -189,13 +190,14 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Preparazione contesto: login, carrello e delivery method."
     },
     {
       "name": "Payments - Happy Path",
       "item": [
         {
-          "name": "Create or Update Payment Intent",
+          "name": "Payments - Happy Path - 1 Create or Update Payment Intent",
           "request": {
             "method": "POST",
             "header": [
@@ -238,7 +240,7 @@
           ]
         },
         {
-          "name": "Create or Update Payment Intent Again",
+          "name": "Payments - Happy Path - 2 Create or Update Payment Intent Again",
           "request": {
             "method": "POST",
             "header": [
@@ -278,13 +280,14 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Flusso positivo con creazione/aggiornamento payment intent."
     },
     {
       "name": "Payments - Negative Path",
       "item": [
         {
-          "name": "Create Payment Intent Without Token",
+          "name": "Payments - Negative Path - 1 Create Payment Intent Without Token",
           "request": {
             "method": "POST",
             "header": [],
@@ -315,7 +318,7 @@
           ]
         },
         {
-          "name": "Create Payment Intent Invalid CartId",
+          "name": "Payments - Negative Path - 2 Create Payment Intent Invalid CartId",
           "request": {
             "method": "POST",
             "header": [
@@ -351,7 +354,7 @@
           ]
         },
         {
-          "name": "Cart - Update Cart Invalid DeliveryMethod",
+          "name": "Payments - Negative Path - 3 Cart - Update Cart Invalid DeliveryMethod",
           "request": {
             "method": "POST",
             "header": [
@@ -395,7 +398,7 @@
           ]
         },
         {
-          "name": "Create Payment Intent With Invalid DeliveryMethod",
+          "name": "Payments - Negative Path - 4 Create Payment Intent With Invalid DeliveryMethod",
           "request": {
             "method": "POST",
             "header": [
@@ -430,13 +433,14 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Flusso negativo: token mancante, cartId/delivery invalidi."
     },
     {
       "name": "Cleanup",
       "item": [
         {
-          "name": "Cart - Delete",
+          "name": "Cleanup - 1 Cart - Delete",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -471,7 +475,8 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Pulizia finale del carrello di test."
     }
   ],
   "variable": [
