@@ -11,10 +11,14 @@ export type LoginRequest = {
 };
 
 export type AddressRequest = {
-  street: string;
+  firstName: string;
+  lastName: string;
+  addressLine1: string;
+  addressLine2?: string | null;
   city: string;
-  state: string;
   postalCode: string;
+  countryCode: string;
+  region?: string | null;
 };
 
 export type RegisterRequest = {

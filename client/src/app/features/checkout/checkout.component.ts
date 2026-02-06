@@ -1,24 +1,49 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, inject, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { OrderSummaryComponent } from '../../shared/components/order-summary/order-summary.component';
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { CartService } from '../../core/services/cart.service';
 import { StripeService } from '../../core/services/stripe.service';
-import { StripeAddressElement } from '@stripe/stripe-js';
+import { Address, StripeAddressElement } from '@stripe/stripe-js';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { MatStepper } from '@angular/material/stepper';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { StepperSelectionEvent } from '@angular/cdk/stepper';
+import { AccountService } from '../../core/services/account.service';
+import { AuthStateService } from '../../core/services/auth-state.service';
+import { firstValueFrom } from 'rxjs';
+import { AddressRequest } from '../../shared/models/auth';
+import { extractValidationErrorMap } from '../../shared/utils/api-error';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-checkout',
-  imports: [OrderSummaryComponent, ...MATERIAL_IMPORTS],
+  imports: [OrderSummaryComponent, RouterLink, FormsModule, ...MATERIAL_IMPORTS],
   standalone: true,
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
 export class CheckoutComponent implements OnInit {
+  private static readonly supportedCountryCodes = new Set(['IT', 'US', 'GB']);
+  private static readonly regionRequiredCountryCodes = new Set(['IT', 'US']);
   private stripeService = inject(StripeService);
   private snackbar = inject(SnackbarService);
+  private accountService = inject(AccountService);
+  private authState = inject(AuthStateService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
   cartService = inject(CartService);
   addressElement?: StripeAddressElement;
+  saveAddress = false;
+  isProceedingToShipping = false;
+  isReturningToAddress = false;
+  pendingAddressReload = false;
+  private initialValueSnapshot: string | null = null;
+  private lastPolledValue: string | null = null;
+  private addressPollingTimerId: ReturnType<typeof setInterval> | null = null;
+
+
 
   subtotal = computed(
     () =>
@@ -32,32 +57,326 @@ export class CheckoutComponent implements OnInit {
 
   async ngOnInit() {
     try {
+      await this.loadDefaultAddressSnapshotFromApi();
       this.addressElement = await this.stripeService.createAddressElement();
-      this.addressElement.mount('#address-element');
+      await this.mountAddressElement(this.addressElement);
+      this.bindAddressChangeHandler();
+      // Ritarda l'avvio del polling per dare tempo a Stripe di popolare il form
+      setTimeout(() => this.startAddressPolling(), 1000);
+
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Errore inatteso.';
       this.snackbar.showError(message);
     }
+
+    // this.startAddressSyncMonitor();
+  }
+
+
+  ngOnDestroy(): void {
+    this.stopAddressPolling();
   }
 
   async goToShipping(stepper: MatStepper) {
+    if (this.isProceedingToShipping) {
+      return;
+    }
+
+    this.isProceedingToShipping = true;
+    try {
+      if (!this.addressElement) {
+        this.snackbar.showError('Indirizzo non disponibile.');
+        return;
+      }
+
+      const { complete } = await this.addressElement.getValue();
+      if (!complete) {
+        this.snackbar.showWarning('Completa tutti i campi obbligatori dell’indirizzo prima di proseguire.');
+        return;
+      }
+
+      if (this.saveAddress) {
+        const isAddressSaved = await this.saveAddressAsDefault();
+        if (!isAddressSaved) {
+          return;
+        }
+
+        this.snackbar.showInfo('Indirizzo predefinito aggiornato.');
+      }
+
+      stepper.next();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Errore inatteso.';
+      this.snackbar.showError(message);
+    } finally {
+      this.isProceedingToShipping = false;
+    }
+  }
+
+  onSaveAddressCheckboxChange(event: MatCheckboxChange) {
+    if (this.isProceedingToShipping) {
+      return;
+    }
+
+    this.saveAddress = event.checked;
+  }
+
+  async goBackToAddress(stepper: MatStepper) {
+    if (this.isReturningToAddress) {
+      return;
+    }
+
+    this.isReturningToAddress = true;
+    this.pendingAddressReload = true;
+    stepper.previous();
+  }
+
+  async onStepChange(event: StepperSelectionEvent) {
+    if (event.selectedIndex !== 0 || !this.pendingAddressReload) {
+      return;
+    }
+
+    this.pendingAddressReload = false;
+    try {
+      await this.remountAddressElementFromAccount();
+      this.snackbar.showInfo('Indirizzo ricaricato dal profilo.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Errore inatteso.';
+      this.snackbar.showWarning(`Ritorno su Address senza ricarica profilo: ${message}`);
+    } finally {
+      this.isReturningToAddress = false;
+    }
+  }
+
+  private async saveAddressAsDefault(): Promise<boolean> {
+    const payload = await this.getAddressPayloadFromStripe();
+    if (!payload) {
+      this.snackbar.showError('Impossibile salvare l’indirizzo predefinito.');
+      return false;
+    }
+
+    try {
+      await firstValueFrom(this.accountService.updateAddress(payload));
+      const result = await this.addressElement?.getValue();
+      if (result) {
+        this.initialValueSnapshot = JSON.stringify(result.value);
+      }
+      this.saveAddress = true;
+      return true;
+    } catch (error) {
+      this.showAddressSaveError(error);
+      return false;
+    }
+  }
+
+  private async getAddressPayloadFromStripe(showWarnings = true): Promise<AddressRequest | null> {
     if (!this.addressElement) {
-      this.snackbar.showError('Indirizzo non disponibile.');
+      return null;
+    }
+
+    const user = this.authState.user();
+    if (!user?.firstName || !user?.lastName) {
+      return null;
+    }
+
+    const result = await this.addressElement.getValue();
+    const address = result.value.address;
+    if (!address) {
+      return null;
+    }
+
+    const firstName = this.normalizeRequired(user.firstName);
+    const lastName = this.normalizeRequired(user.lastName);
+    const addressLine1 = this.normalizeRequired(address.line1);
+    const city = this.normalizeRequired(address.city);
+    const postalCode = this.normalizeRequired(address.postal_code);
+    const countryCode = this.normalizeRequired(address.country).toUpperCase();
+    const region = this.normalizeOptional(address.state);
+    const addressLine2 = this.normalizeOptional(address.line2);
+
+    if (!firstName || !lastName || !addressLine1 || !city || !postalCode || countryCode.length !== 2) {
+      return null;
+    }
+
+    if (!CheckoutComponent.supportedCountryCodes.has(countryCode)) {
+      if (showWarnings) {
+        this.snackbar.showWarning('Paese non supportato. Usa IT, US o GB.');
+      }
+      return null;
+    }
+
+    const isRegionRequired = CheckoutComponent.regionRequiredCountryCodes.has(countryCode);
+    if (isRegionRequired && !region) {
+      if (showWarnings) {
+        this.snackbar.showWarning('Provincia/Stato obbligatorio per il paese selezionato.');
+      }
+      return null;
+    }
+
+    return {
+      firstName,
+      lastName,
+      addressLine1,
+      addressLine2,
+      city,
+      postalCode,
+      countryCode,
+      region,
+    };
+  }
+
+  private showAddressSaveError(error: unknown): void {
+    if (!(error instanceof HttpErrorResponse)) {
+      this.snackbar.showError('Errore inatteso durante il salvataggio indirizzo.');
+      return;
+    }
+
+    if (error.status === 401) {
+      this.snackbar.showError('Sessione scaduta. Effettua di nuovo l’accesso e riprova.');
+      return;
+    }
+
+    if (error.status === 404) {
+      this.snackbar.showError('Utente non trovato. Ricarica la pagina e riprova.');
+      return;
+    }
+
+    if (error.status === 400) {
+      const validationMap = extractValidationErrorMap(error.error);
+      if (validationMap) {
+        const firstError = Object.values(validationMap).flat()[0];
+        if (firstError) {
+          this.snackbar.showWarning(firstError);
+          return;
+        }
+      }
+
+      this.snackbar.showWarning('Indirizzo non valido. Verifica i campi e riprova.');
+      return;
+    }
+
+    this.snackbar.showError('Impossibile salvare l’indirizzo predefinito. Riprova.');
+  }
+
+  private async remountAddressElementFromAccount(): Promise<void> {
+    this.addressElement?.destroy();
+    // Non serve ricaricare da API qui, StripeService lo fa internamente.
+    // Impostiamo saveAddress a true perché stiamo visualizzando i dati del DB.
+    this.saveAddress = true;
+    this.cdr.detectChanges();
+    
+    this.recreateAddressContainer();
+    this.addressElement = await this.stripeService.createAddressElement(true);
+    await this.mountAddressElement(this.addressElement);
+    this.initialValueSnapshot = null;
+    this.lastPolledValue = null;
+    this.bindAddressChangeHandler();
+    setTimeout(() => this.startAddressPolling(), 1000);
+  }
+
+
+  private normalizeRequired(value: string | null | undefined): string {
+    return value?.trim() ?? '';
+  }
+
+  private normalizeOptional(value: string | null | undefined): string | null {
+    const normalized = value?.trim();
+    return normalized ? normalized : null;
+  }
+
+  private async mountAddressElement(addressElement: StripeAddressElement): Promise<void> {
+    await this.waitForAddressContainer();
+    addressElement.mount('#address-element');
+  }
+
+  private async waitForAddressContainer(maxAttempts = 20, delayMs = 50): Promise<void> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (document.getElementById('address-element')) {
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    throw new Error('Contenitore address non disponibile.');
+  }
+
+  private recreateAddressContainer(): void {
+    const currentContainer = document.getElementById('address-element');
+    if (!currentContainer || !currentContainer.parentElement) {
+      return;
+    }
+
+    const replacement = document.createElement('div');
+    replacement.id = 'address-element';
+    currentContainer.parentElement.replaceChild(replacement, currentContainer);
+  }
+
+  private bindAddressChangeHandler(): void {
+    // Polling handles changes now.
+  }
+
+
+
+  private async loadDefaultAddressSnapshotFromApi(): Promise<void> {
+    try {
+      await firstValueFrom(this.accountService.getAddress());
+      this.saveAddress = true;
+    } catch {
+      this.saveAddress = false;
+    }
+  }
+
+  private startAddressPolling(): void {
+    this.stopAddressPolling();
+    this.addressPollingTimerId = setInterval(() => {
+      this.ngZone.run(() => {
+        void this.checkAddressChange();
+      });
+    }, 300);
+  }
+
+  private stopAddressPolling(): void {
+    if (this.addressPollingTimerId) {
+      clearInterval(this.addressPollingTimerId);
+      this.addressPollingTimerId = null;
+    }
+  }
+
+  private async checkAddressChange(): Promise<void> {
+    if (!this.addressElement) {
       return;
     }
 
     try {
-      const { complete } = await this.addressElement.getValue();
-      if (!complete) {
-        this.snackbar.showError('Completa tutti i campi obbligatori dell’indirizzo.');
+      const result = await this.addressElement.getValue();
+      const currentVal = JSON.stringify(result.value);
+      
+      if (this.initialValueSnapshot === null) {
+        this.initialValueSnapshot = currentVal;
+        this.lastPolledValue = currentVal;
+        // Quando catturiamo lo snapshot iniziale, il checkbox deve essere spuntato
+        // perché stiamo caricando i dati dal DB
+        this.saveAddress = true;
+        // Forza Angular a rilevare il cambiamento e aggiornare l'UI
+        this.cdr.detectChanges();
         return;
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Errore inatteso.';
-      this.snackbar.showError(message);
-      return;
+      
+      // Se il valore è cambiato rispetto all'ultimo controllo (intervento utente sui dati)
+      if (currentVal !== this.lastPolledValue) {
+        this.lastPolledValue = currentVal;
+        
+        const shouldBeChecked = currentVal === this.initialValueSnapshot;
+        
+        // Aggiorniamo il checkbox solo se lo stato calcolato è diverso da quello attuale
+        if (this.saveAddress !== shouldBeChecked) {
+            this.saveAddress = shouldBeChecked;
+            this.cdr.detectChanges();
+        }
+      }
+    } catch {
+      // Ignora errori durante il polling
     }
-
-    stepper.next();
   }
 }

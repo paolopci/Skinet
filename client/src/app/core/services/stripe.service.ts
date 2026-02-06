@@ -75,13 +75,17 @@ export class StripeService {
   }
 
   private resetStripeSession() {
+    this.destroyAddressElement();
     this.elements = undefined;
-    this.addressElement = undefined;
     this.stripePromise = null;
   }
 
-  async createAddressElement() {
+  async createAddressElement(forceReload = false) {
     this.ensureUserContext();
+    if (forceReload) {
+      this.destroyAddressElement();
+    }
+
     if (!this.addressElement) {
       const elements = await this.initializeElements();
       if (elements) {
@@ -105,11 +109,12 @@ export class StripeService {
           options.defaultValues = {
             ...(options.defaultValues ?? {}),
             address: {
-              line1: address.street,
+              line1: address.addressLine1,
+              line2: address.addressLine2 ?? undefined,
               city: address.city,
-              state: address.state,
+              state: address.region ?? undefined,
               postal_code: address.postalCode,
-              country: 'IT',
+              country: address.countryCode,
             },
           };
         } catch {
@@ -121,6 +126,20 @@ export class StripeService {
       }
     }
     return this.addressElement;
+  }
+
+  private destroyAddressElement() {
+    if (!this.addressElement) {
+      return;
+    }
+
+    try {
+      this.addressElement.destroy();
+    } catch {
+      // Ignoriamo errori di distruzione e procediamo con una nuova istanza.
+    } finally {
+      this.addressElement = undefined;
+    }
   }
 
   createOrUpdatePaymentIntent() {

@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
 import { extractValidationErrorMap } from '../../../shared/utils/api-error';
+import { RegisterRequest } from '../../../shared/models/auth';
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
 const phonePattern = /^[0-9+()\s-]{6,}$/;
@@ -52,7 +53,22 @@ export class RegisterComponent {
     this.isSubmitting = true;
     this.validationErrors = null;
 
-    this.authService.register(this.form.getRawValue()).subscribe({
+    const rawValue = this.form.getRawValue();
+    const payload: RegisterRequest = {
+      ...rawValue,
+      address: {
+        firstName: rawValue.firstName,
+        lastName: rawValue.lastName,
+        addressLine1: rawValue.address.street,
+        addressLine2: null,
+        city: rawValue.address.city,
+        postalCode: rawValue.address.postalCode,
+        countryCode: 'IT',
+        region: rawValue.address.state,
+      },
+    };
+
+    this.authService.register(payload).subscribe({
       next: () => {
         this.router.navigateByUrl('/login');
         this.isSubmitting = false;
