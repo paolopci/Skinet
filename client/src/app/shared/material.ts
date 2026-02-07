@@ -12,6 +12,7 @@ import { MatFormField, MatLabel, MatError, MatSuffix } from '@angular/material/f
 import { MatInput } from '@angular/material/input';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioGroup } from '@angular/material/radio';
 
 // prettier-ignore
 const MATERIAL_IMPORTS = [
@@ -34,7 +35,8 @@ const MATERIAL_IMPORTS = [
     MatSuffix,
     MatCardTitle,
     MatStepperModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatRadioGroup
 ];
 const SNACKBAR_PANEL_CLASSES = {
   error: 'snackbar-error',

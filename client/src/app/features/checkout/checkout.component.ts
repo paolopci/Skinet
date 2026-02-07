@@ -16,10 +16,12 @@ import { firstValueFrom } from 'rxjs';
 import { AddressRequest } from '../../shared/models/auth';
 import { extractValidationErrorMap } from '../../shared/utils/api-error';
 import { FormsModule } from '@angular/forms';
+import { CheckoutDeliveryComponent } from './checkout-delivery/checkout-delivery.component';
+import { CheckoutService } from '../../core/services/checkout.service';
 
 @Component({
   selector: 'app-checkout',
-  imports: [OrderSummaryComponent, RouterLink, FormsModule, ...MATERIAL_IMPORTS],
+  imports: [OrderSummaryComponent, RouterLink, FormsModule, ...MATERIAL_IMPORTS, CheckoutDeliveryComponent],
   standalone: true,
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
@@ -34,6 +36,7 @@ export class CheckoutComponent implements OnInit {
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   cartService = inject(CartService);
+  checkoutService = inject(CheckoutService);
   addressElement?: StripeAddressElement;
   saveAddress = false;
   isProceedingToShipping = false;
@@ -51,7 +54,7 @@ export class CheckoutComponent implements OnInit {
         .cart()
         ?.items.reduce((total, item) => total + item.price * item.quantity, 0) ?? 0,
   );
-  shippingCost = computed(() => (this.subtotal() > 0 ? 0 : 0));
+  shippingCost = computed(() => this.checkoutService.selectedDeliveryMethod()?.price ?? 0);
   discount = computed(() => 0);
   orderTotal = computed(() => this.subtotal() + this.shippingCost() - this.discount());
 

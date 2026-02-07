@@ -21,11 +21,12 @@
             </mat-step>
 
             <mat-step label="Shipping">
+                <app-checkout-delivery></app-checkout-delivery>
                 <div class="flex justify-between mt-6">
                     <button mat-stroked-button [disabled]="isReturningToAddress" (click)="goBackToAddress(stepper)">
                         {{ isReturningToAddress ? 'Loading address...' : 'Back' }}
                     </button>
-                    <button mat-flat-button matStepperNext>Next</button>
+                    <button mat-flat-button matStepperNext [disabled]="!checkoutService.selectedDeliveryMethod()">Next</button>
                 </div>
             </mat-step>
             <mat-step label="Payment">
