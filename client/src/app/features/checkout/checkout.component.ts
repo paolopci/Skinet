@@ -403,13 +403,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private async initializePaymentElementForStep(): Promise<void> {
-    if (this.isPaymentElementReady || this.isLoadingPaymentElement) {
+    if (this.isLoadingPaymentElement || this.isProcessingPayment) {
       return;
     }
 
     this.isLoadingPaymentElement = true;
     this.paymentElementError = null;
     this.isPaymentElementComplete = false;
+    this.isPaymentElementReady = false;
 
     try {
       await firstValueFrom(this.stripeService.createOrUpdatePaymentIntent());
@@ -419,7 +420,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.bindPaymentElementChangeHandler(this.paymentElement);
       this.isPaymentElementReady = true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Errore inatteso durante il caricamento pagamento.';
+      const message = this.getPaymentElementLoadErrorMessage(error);
       this.paymentElementError = message;
       this.snackbar.showError(message);
       this.isPaymentElementReady = false;
@@ -519,5 +520,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     return 'Impossibile finalizzare il pagamento. Riprova.';
+  }
+
+  retryPaymentElementLoad(): void {
+    void this.initializePaymentElementForStep();
+  }
+
+  private getPaymentElementLoadErrorMessage(error: unknown): string {
+    if (!(error instanceof Error)) {
+      return 'Errore inatteso durante il caricamento del pagamento.';
+    }
+
+    if (error.message.includes('Client secret Stripe mancante')) {
+      return 'Sessione pagamento non pronta. Torna a Shipping e riprova.';
+    }
+
+    return error.message;
   }
 }

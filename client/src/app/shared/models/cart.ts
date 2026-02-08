@@ -5,7 +5,7 @@ export type CartType = {
   items: CartItem[];
   deliveryMethodId?: number;
   paymentIntentId?: string;
-  clientsecret?: string;
+  clientSecret?: string;
 };
 
 export type CartItem = {
@@ -23,5 +23,5 @@ export class Cart implements CartType {
   items: CartItem[] = [];
   deliveryMethodId?: number;
   paymentIntentId?: string;
-  clientsecret?: string;
+  clientSecret?: string;
 }

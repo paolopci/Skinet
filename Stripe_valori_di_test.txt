@@ -1,0 +1,28 @@
+
+Stripe Test: 
+--------------------------------------
+Usa una carta test Stripe valida:
+4242 4242 4242 4242 (pagamento ok)
+--------------------------------------
+
+Scadenza futura (es. 12/34)
+
+--------------------------------------
+CVC qualsiasi 3 cifre (es. 123)
+
+--------------------------------------
+
+Compila il telefono in formato completo internazionale:
+Es. +39 3123456789 (non numeri casuali troppo corti)
+
+---------------------------------------
+Se compare il blocco Link, completa anche:
+Full name
+Email coerente
+(altrimenti il form resta invalido e Next resta disabilitato)
+
+----------------------------------------
+
+Per testare errori specifici:
+Carta rifiutata: 4000 0000 0000 0002
+3DS richiesto: 4000 0025 0000 3155

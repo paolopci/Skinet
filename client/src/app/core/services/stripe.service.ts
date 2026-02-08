@@ -83,8 +83,15 @@ export class StripeService {
       const stripe = await this.getStripe();
       if (stripe) {
         const cart = await firstValueFrom(this.createOrUpdatePaymentIntent());
+        const clientSecret = cart.clientSecret?.trim();
+        if (!clientSecret) {
+          throw new Error(
+            'Client secret Stripe mancante nel carrello. Verifica endpoint /payments/{cartId} e mapping clientSecret.',
+          );
+        }
+
         this.elements = stripe.elements({
-          clientSecret: cart.clientsecret,
+          clientSecret,
           appearance: { labels: 'floating' },
         });
       } else {
