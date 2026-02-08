@@ -45,7 +45,7 @@ Obiettivo: mantenere un flusso di lavoro chiaro, coerente e manutenibile per API
   - suffisso `.md`
 - Esempio:
   - Titolo: `Allineamento Carrello Post-Pagamento (Client/Server)`
-  - File: `docs/plans/allineamento-carrello-post-pagamento-client-server.md`
+  - File: `docs/plans/002-allineamento-carrello-post-pagamento-client-server.md`
 - Il file piano deve essere committabile su GitHub e non escluso da `.gitignore`.
 - Formato minimo obbligatorio:
   - Titolo piano
