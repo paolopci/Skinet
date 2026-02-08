@@ -34,6 +34,29 @@ Applicazione web full-stack con API ASP.NET Core e client Angular 21. Backend co
 6) Se compare l'errore "Accesso negato", procedi con permessi elevati.
 7) Piano di Implementazione: contenuto sempre in italiano.
 
+## Regola File Piano Implementato
+- In modalita' plan, crea un file markdown del piano **solo se il piano viene effettivamente implementato** (con modifiche reali al repository).
+- Se il piano resta solo discusso/pianificato, viene annullato o sostituito prima dell'implementazione, **non** creare alcun file piano.
+- Salva i piani implementati nella cartella root `docs/plans/`.
+- Usa naming filename in `slug kebab-case` derivato dal titolo piano:
+  - lowercase
+  - spazi/separatori convertiti in `-`
+  - rimozione di accenti e caratteri non validi su Windows (`() / \\ : * ? " < > |`)
+  - collasso trattini multipli
+  - suffisso `.md`
+- Esempio ufficiale:
+  - Titolo: `Allineamento Carrello Post-Pagamento (Client/Server)`
+  - File: `docs/plans/allineamento-carrello-post-pagamento-client-server.md`
+- Il file piano deve essere committabile su GitHub e non deve essere escluso da `.gitignore`.
+- Formato minimo obbligatorio del file piano:
+  - Titolo piano
+  - Data (ISO)
+  - Scope
+  - Checklist step
+  - Stato finale per step (testuale: `open` / `completed`)
+  - Verifiche eseguite (build/test)
+  - File toccati
+
 ## Struttura del Progetto e Organizzazione dei Moduli
 Questa soluzione .NET 9 e suddivisa in tre progetti. Usa `Skinet.sln` per build a livello di soluzione.
 - `API/`: host ASP.NET Core Web API, controller e configurazione (`appsettings*.json`, `Properties/launchSettings.json`).
