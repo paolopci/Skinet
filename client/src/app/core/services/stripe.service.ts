@@ -5,6 +5,8 @@ import {
   StripeAddressElement,
   StripeAddressElementOptions,
   StripeElements,
+  StripePaymentElement,
+  StripePaymentElementOptions,
 } from '@stripe/stripe-js';
 import { environment } from '../../../environments/environment.development';
 import { CartService } from './cart.service';
@@ -29,6 +31,7 @@ export class StripeService {
   private stripePromise: Promise<Stripe | null> | null = null;
   private elements?: StripeElements;
   private addressElement?: StripeAddressElement;
+  private paymentElement?: StripePaymentElement;
   private lastUserEmail?: string;
 
   private getPublicKey(): string {
@@ -96,6 +99,7 @@ export class StripeService {
 
   private resetStripeSession() {
     this.destroyAddressElement();
+    this.destroyPaymentElement();
     this.elements = undefined;
     this.stripePromise = null;
   }
@@ -159,6 +163,41 @@ export class StripeService {
       // Ignoriamo errori di distruzione e procediamo con una nuova istanza.
     } finally {
       this.addressElement = undefined;
+    }
+  }
+
+  async createPaymentElement(forceReload = false) {
+    this.ensureUserContext();
+    if (forceReload) {
+      this.destroyPaymentElement();
+    }
+
+    if (!this.paymentElement) {
+      const elements = await this.initializeElements();
+      if (elements) {
+        const options: StripePaymentElementOptions = {
+          layout: 'tabs',
+        };
+        this.paymentElement = elements.create('payment', options);
+      } else {
+        throw new Error('Elements instance has not been loaded');
+      }
+    }
+
+    return this.paymentElement;
+  }
+
+  private destroyPaymentElement() {
+    if (!this.paymentElement) {
+      return;
+    }
+
+    try {
+      this.paymentElement.destroy();
+    } catch {
+      // Ignoriamo errori di distruzione e procediamo con una nuova istanza.
+    } finally {
+      this.paymentElement = undefined;
     }
   }
 

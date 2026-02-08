@@ -30,9 +30,21 @@
                 </div>
             </mat-step>
             <mat-step label="Payment">
+                @if (isLoadingPaymentElement) {
+                <div class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    Caricamento metodi di pagamento...
+                </div>
+                }
+                <div id="payment-element" class="min-h-24"></div>
+                @if (paymentElementError) {
+                <p class="mt-3 text-sm text-red-600">{{ paymentElementError }}</p>
+                }
                 <div class="flex justify-between mt-6">
                     <button mat-stroked-button matStepperPrevious>Back</button>
-                    <button mat-flat-button matStepperNext>Next</button>
+                    <button mat-flat-button matStepperNext
+                        [disabled]="isLoadingPaymentElement || !isPaymentElementReady || !isPaymentElementComplete">
+                        Next
+                    </button>
                 </div>
             </mat-step>
             <mat-step label="Confirmation"> Review form </mat-step>

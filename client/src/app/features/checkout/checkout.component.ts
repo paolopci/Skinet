@@ -5,7 +5,7 @@ import { OrderSummaryComponent } from '../../shared/components/order-summary/ord
 import { MATERIAL_IMPORTS } from '../../shared/material';
 import { CartService } from '../../core/services/cart.service';
 import { StripeService } from '../../core/services/stripe.service';
-import { Address, StripeAddressElement } from '@stripe/stripe-js';
+import { Address, StripeAddressElement, StripePaymentElement } from '@stripe/stripe-js';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { MatStepper } from '@angular/material/stepper';
 import { MatCheckboxChange } from '@angular/material/checkbox';
@@ -26,7 +26,7 @@ import { CheckoutService } from '../../core/services/checkout.service';
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
   private static readonly supportedCountryCodes = new Set(['IT', 'US', 'GB']);
   private static readonly regionRequiredCountryCodes = new Set(['IT', 'US']);
   private stripeService = inject(StripeService);
@@ -38,10 +38,15 @@ export class CheckoutComponent implements OnInit {
   cartService = inject(CartService);
   checkoutService = inject(CheckoutService);
   addressElement?: StripeAddressElement;
+  paymentElement?: StripePaymentElement;
   saveAddress = false;
   isProceedingToShipping = false;
   isReturningToAddress = false;
   pendingAddressReload = false;
+  isLoadingPaymentElement = false;
+  isPaymentElementReady = false;
+  isPaymentElementComplete = false;
+  paymentElementError: string | null = null;
   private initialValueSnapshot: string | null = null;
   private lastPolledValue: string | null = null;
   private addressPollingTimerId: ReturnType<typeof setInterval> | null = null;
@@ -135,19 +140,21 @@ export class CheckoutComponent implements OnInit {
   }
 
   async onStepChange(event: StepperSelectionEvent) {
-    if (event.selectedIndex !== 0 || !this.pendingAddressReload) {
-      return;
+    if (event.selectedIndex === 0 && this.pendingAddressReload) {
+      this.pendingAddressReload = false;
+      try {
+        await this.remountAddressElementFromAccount();
+        this.snackbar.showInfo('Indirizzo ricaricato dal profilo.');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Errore inatteso.';
+        this.snackbar.showWarning(`Ritorno su Address senza ricarica profilo: ${message}`);
+      } finally {
+        this.isReturningToAddress = false;
+      }
     }
 
-    this.pendingAddressReload = false;
-    try {
-      await this.remountAddressElementFromAccount();
-      this.snackbar.showInfo('Indirizzo ricaricato dal profilo.');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Errore inatteso.';
-      this.snackbar.showWarning(`Ritorno su Address senza ricarica profilo: ${message}`);
-    } finally {
-      this.isReturningToAddress = false;
+    if (event.selectedIndex === 2) {
+      await this.initializePaymentElementForStep();
     }
   }
 
@@ -288,30 +295,38 @@ export class CheckoutComponent implements OnInit {
   }
 
   private async mountAddressElement(addressElement: StripeAddressElement): Promise<void> {
-    await this.waitForAddressContainer();
+    await this.waitForElementContainer('address-element');
     addressElement.mount('#address-element');
   }
 
-  private async waitForAddressContainer(maxAttempts = 20, delayMs = 50): Promise<void> {
+  private async waitForElementContainer(elementId: string, maxAttempts = 20, delayMs = 50): Promise<void> {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      if (document.getElementById('address-element')) {
+      if (document.getElementById(elementId)) {
         return;
       }
 
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
-    throw new Error('Contenitore address non disponibile.');
+    throw new Error(`Contenitore ${elementId} non disponibile.`);
   }
 
   private recreateAddressContainer(): void {
-    const currentContainer = document.getElementById('address-element');
+    this.recreateElementContainer('address-element');
+  }
+
+  private recreatePaymentContainer(): void {
+    this.recreateElementContainer('payment-element');
+  }
+
+  private recreateElementContainer(elementId: string): void {
+    const currentContainer = document.getElementById(elementId);
     if (!currentContainer || !currentContainer.parentElement) {
       return;
     }
 
     const replacement = document.createElement('div');
-    replacement.id = 'address-element';
+    replacement.id = elementId;
     currentContainer.parentElement.replaceChild(replacement, currentContainer);
   }
 
@@ -381,5 +396,47 @@ export class CheckoutComponent implements OnInit {
     } catch {
       // Ignora errori durante il polling
     }
+  }
+
+  private async initializePaymentElementForStep(): Promise<void> {
+    if (this.isPaymentElementReady || this.isLoadingPaymentElement) {
+      return;
+    }
+
+    this.isLoadingPaymentElement = true;
+    this.paymentElementError = null;
+    this.isPaymentElementComplete = false;
+
+    try {
+      await firstValueFrom(this.stripeService.createOrUpdatePaymentIntent());
+      this.recreatePaymentContainer();
+      this.paymentElement = await this.stripeService.createPaymentElement(true);
+      await this.mountPaymentElement(this.paymentElement);
+      this.bindPaymentElementChangeHandler(this.paymentElement);
+      this.isPaymentElementReady = true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Errore inatteso durante il caricamento pagamento.';
+      this.paymentElementError = message;
+      this.snackbar.showError(message);
+      this.isPaymentElementReady = false;
+    } finally {
+      this.isLoadingPaymentElement = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async mountPaymentElement(paymentElement: StripePaymentElement): Promise<void> {
+    await this.waitForElementContainer('payment-element');
+    paymentElement.mount('#payment-element');
+  }
+
+  private bindPaymentElementChangeHandler(paymentElement: StripePaymentElement): void {
+    paymentElement.on('change', (event) => {
+      this.ngZone.run(() => {
+        this.isPaymentElementComplete = !!event.complete;
+        this.paymentElementError = null;
+        this.cdr.detectChanges();
+      });
+    });
   }
 }
