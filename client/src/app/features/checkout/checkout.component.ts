@@ -482,6 +482,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
 
+      this.cartService.clearClientCartState();
       this.isOrderConfirmed = true;
       this.confirmedOrderId = finalizeResult.orderId ?? null;
       this.confirmationMessage = finalizeResult.message ?? null;
