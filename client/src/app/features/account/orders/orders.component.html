@@ -76,24 +76,26 @@
       <table class="min-w-full text-sm">
         <thead class="bg-slate-50 text-left text-slate-700">
           <tr>
-            <th class="px-4 py-3">OrderId</th>
+            <th class="px-4 py-3 numeric-cell">OrderId</th>
             <th class="px-4 py-3">Data</th>
             <th class="px-4 py-3">Stato</th>
-            <th class="px-4 py-3">Importo</th>
-            <th class="px-4 py-3">Trimestre</th>
-            <th class="px-4 py-3">Anno</th>
+            <th class="px-4 py-3 numeric-cell">Importo</th>
+            <th class="px-4 py-3 numeric-cell">Trimestre</th>
+            <th class="px-4 py-3 numeric-cell">Anno</th>
             <th class="px-4 py-3">Azioni</th>
           </tr>
         </thead>
         <tbody>
           @for (order of response().orders; track order.orderId) {
             <tr class="border-t border-slate-100">
-              <td class="px-4 py-3 font-medium text-slate-800">{{ order.orderId }}</td>
+              <td class="px-4 py-3 font-medium text-slate-800 numeric-cell">{{ order.orderId }}</td>
               <td class="px-4 py-3 text-slate-700">{{ order.data }}</td>
               <td class="px-4 py-3 capitalize text-slate-700">{{ order.stato }}</td>
-              <td class="px-4 py-3 text-slate-700">{{ order.importo | number: '1.2-2' }}</td>
-              <td class="px-4 py-3 text-slate-700">{{ order.trimestre }}</td>
-              <td class="px-4 py-3 text-slate-700">{{ order.anno }}</td>
+              <td class="px-4 py-3 text-slate-700 numeric-cell">
+                {{ order.importo | currency: 'USD':'symbol':'1.2-2' }}
+              </td>
+              <td class="px-4 py-3 text-slate-700 numeric-cell">{{ order.trimestre }}</td>
+              <td class="px-4 py-3 text-slate-700 numeric-cell">{{ order.anno }}</td>
               <td class="px-4 py-3">
                 <button mat-stroked-button type="button" (click)="openOrderDetails(order.orderId)">
                   Dettagli

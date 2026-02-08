@@ -1,7 +1,8 @@
-import { DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { MATERIAL_IMPORTS } from '../../../../shared/material';
 import { OrdersService } from '../../../../core/services/orders.service';
 import { OrderDetailsResponse } from '../../../../shared/models/order-details-response';
@@ -13,13 +14,14 @@ export type OrderDetailsDialogData = {
 @Component({
   selector: 'app-order-details-dialog',
   standalone: true,
-  imports: [DecimalPipe, ...MATERIAL_IMPORTS],
+  imports: [CurrencyPipe, ...MATERIAL_IMPORTS],
   templateUrl: './order-details-dialog.component.html',
   styleUrl: './order-details-dialog.component.scss',
 })
 export class OrderDetailsDialogComponent implements OnInit {
   private readonly ordersService = inject(OrdersService);
   private readonly dialogRef = inject(MatDialogRef<OrderDetailsDialogComponent>);
+  private readonly router = inject(Router);
   readonly data = inject<OrderDetailsDialogData>(MAT_DIALOG_DATA);
 
   readonly details = signal<OrderDetailsResponse | null>(null);
@@ -36,6 +38,11 @@ export class OrderDetailsDialogComponent implements OnInit {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  goToProduct(productId: number): void {
+    this.dialogRef.close();
+    void this.router.navigate(['/shop', productId]);
   }
 
   private loadOrderDetails(): void {

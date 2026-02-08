@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
@@ -18,7 +18,7 @@ import {
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, ...MATERIAL_IMPORTS],
+  imports: [FormsModule, CurrencyPipe, ...MATERIAL_IMPORTS],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss',
 })

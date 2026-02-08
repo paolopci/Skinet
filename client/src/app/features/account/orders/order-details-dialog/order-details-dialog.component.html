@@ -21,7 +21,7 @@
         <div><strong>Ordine #</strong> {{ order.orderId }}</div>
         <div><strong>Data:</strong> {{ order.data }}</div>
         <div><strong>Stato:</strong> <span class="capitalize">{{ order.stato }}</span></div>
-        <div><strong>Totale:</strong> {{ order.importo | number: '1.2-2' }}</div>
+        <div><strong>Totale:</strong> {{ order.importo | currency: 'USD':'symbol':'1.2-2' }}</div>
         <div><strong>Pagamento:</strong> {{ order.tipoPagamento }}</div>
         @if (order.numeroCarta) {
           <div><strong>Carta:</strong> {{ order.numeroCarta }}</div>
@@ -36,9 +36,9 @@
             <thead>
               <tr>
                 <th>Prodotto</th>
-                <th>Quantità</th>
-                <th>Prezzo unitario</th>
-                <th>Totale riga</th>
+                <th class="numeric-cell">Quantità</th>
+                <th class="numeric-cell">Prezzo unitario</th>
+                <th class="numeric-cell">Totale riga</th>
               </tr>
             </thead>
             <tbody>
@@ -46,20 +46,33 @@
                 <tr>
                   <td>
                     <div class="product-cell">
-                      <img
-                        [src]="item.immagineUrl || '/images/placeholder.png'"
-                        [alt]="item.nomeProdotto"
-                        loading="lazy"
-                      />
+                      <button
+                        type="button"
+                        class="product-link-reset"
+                        [attr.aria-label]="'Apri dettaglio prodotto ' + item.nomeProdotto"
+                        (click)="goToProduct(item.prodottoId)"
+                      >
+                        <img
+                          [src]="item.immagineUrl || '/images/placeholder.png'"
+                          [alt]="item.nomeProdotto"
+                          loading="lazy"
+                        />
+                      </button>
                       <div>
-                        <div class="product-name">{{ item.nomeProdotto }}</div>
+                        <button
+                          type="button"
+                          class="product-link"
+                          (click)="goToProduct(item.prodottoId)"
+                        >
+                          {{ item.nomeProdotto }}
+                        </button>
                         <div class="product-id">ID: {{ item.prodottoId }}</div>
                       </div>
                     </div>
                   </td>
-                  <td>{{ item.quantita }}</td>
-                  <td>{{ item.prezzoUnitario | number: '1.2-2' }}</td>
-                  <td>{{ item.totaleRiga | number: '1.2-2' }}</td>
+                  <td class="numeric-cell">{{ item.quantita }}</td>
+                  <td class="numeric-cell">{{ item.prezzoUnitario | currency: 'USD':'symbol':'1.2-2' }}</td>
+                  <td class="numeric-cell">{{ item.totaleRiga | currency: 'USD':'symbol':'1.2-2' }}</td>
                 </tr>
               }
             </tbody>

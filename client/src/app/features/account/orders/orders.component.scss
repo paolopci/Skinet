@@ -22,3 +22,8 @@
   background: rgb(255 241 242);
   color: rgb(159 18 57);
 }
+
+.numeric-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
