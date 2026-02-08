@@ -1,4 +1,12 @@
-import { ChangeDetectorRef, Component, computed, inject, NgZone, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { OrderSummaryComponent } from '../../shared/components/order-summary/order-summary.component';
@@ -20,10 +28,17 @@ import { CheckoutDeliveryComponent } from './checkout-delivery/checkout-delivery
 import { CheckoutService } from '../../core/services/checkout.service';
 import { PaymentMethodsService } from '../../core/services/payment-methods.service';
 import { SavedPaymentMethod } from '../../shared/models/saved-payment-method';
+import { OrdersService } from '../../core/services/orders.service';
 
 @Component({
   selector: 'app-checkout',
-  imports: [OrderSummaryComponent, RouterLink, FormsModule, ...MATERIAL_IMPORTS, CheckoutDeliveryComponent],
+  imports: [
+    OrderSummaryComponent,
+    RouterLink,
+    FormsModule,
+    ...MATERIAL_IMPORTS,
+    CheckoutDeliveryComponent,
+  ],
   standalone: true,
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
@@ -38,6 +53,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   private paymentMethodsService = inject(PaymentMethodsService);
+  private ordersService = inject(OrdersService);
   cartService = inject(CartService);
   checkoutService = inject(CheckoutService);
   addressElement?: StripeAddressElement;
@@ -62,8 +78,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private lastPolledValue: string | null = null;
   private addressPollingTimerId: ReturnType<typeof setInterval> | null = null;
 
-
-
   subtotal = computed(
     () =>
       this.cartService
@@ -83,7 +97,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.bindAddressChangeHandler();
       // Ritarda l'avvio del polling per dare tempo a Stripe di popolare il form
       setTimeout(() => this.startAddressPolling(), 1000);
-
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Errore inatteso.';
       this.snackbar.showError(message);
@@ -91,7 +104,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     // this.startAddressSyncMonitor();
   }
-
 
   ngOnDestroy(): void {
     this.stopAddressPolling();
@@ -111,7 +123,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
       const { complete } = await this.addressElement.getValue();
       if (!complete) {
-        this.snackbar.showWarning('Completa tutti i campi obbligatori dell’indirizzo prima di proseguire.');
+        this.snackbar.showWarning(
+          'Completa tutti i campi obbligatori dell’indirizzo prima di proseguire.',
+        );
         return;
       }
 
@@ -205,11 +219,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.selectedSavedPaymentMethodId = null;
       if (error instanceof HttpErrorResponse) {
         if (error.status === 401) {
-          this.snackbar.showWarning('Sessione scaduta. Effettua di nuovo l’accesso per vedere le carte salvate.');
+          this.snackbar.showWarning(
+            'Sessione scaduta. Effettua di nuovo l’accesso per vedere le carte salvate.',
+          );
         } else if (error.status === 403) {
           this.snackbar.showWarning('Non sei autorizzato a visualizzare i metodi salvati.');
         } else if (error.status === 502) {
-          this.snackbar.showWarning('Provider pagamenti non disponibile. Mostro solo inserimento nuova carta.');
+          this.snackbar.showWarning(
+            'Provider pagamenti non disponibile. Mostro solo inserimento nuova carta.',
+          );
         }
       }
     } finally {
@@ -263,7 +281,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const region = this.normalizeOptional(address.state);
     const addressLine2 = this.normalizeOptional(address.line2);
 
-    if (!firstName || !lastName || !addressLine1 || !city || !postalCode || countryCode.length !== 2) {
+    if (
+      !firstName ||
+      !lastName ||
+      !addressLine1 ||
+      !city ||
+      !postalCode ||
+      countryCode.length !== 2
+    ) {
       return null;
     }
 
@@ -333,7 +358,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     // Impostiamo saveAddress a true perché stiamo visualizzando i dati del DB.
     this.saveAddress = true;
     this.cdr.detectChanges();
-    
+
     this.recreateAddressContainer();
     this.addressElement = await this.stripeService.createAddressElement(true);
     await this.mountAddressElement(this.addressElement);
@@ -342,7 +367,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.bindAddressChangeHandler();
     setTimeout(() => this.startAddressPolling(), 1000);
   }
-
 
   private normalizeRequired(value: string | null | undefined): string {
     return value?.trim() ?? '';
@@ -358,7 +382,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     addressElement.mount('#address-element');
   }
 
-  private async waitForElementContainer(elementId: string, maxAttempts = 20, delayMs = 50): Promise<void> {
+  private async waitForElementContainer(
+    elementId: string,
+    maxAttempts = 20,
+    delayMs = 50,
+  ): Promise<void> {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       if (document.getElementById(elementId)) {
         return;
@@ -393,8 +421,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     // Polling handles changes now.
   }
 
-
-
   private async loadDefaultAddressSnapshotFromApi(): Promise<void> {
     try {
       await firstValueFrom(this.accountService.getAddress());
@@ -428,7 +454,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     try {
       const result = await this.addressElement.getValue();
       const currentVal = JSON.stringify(result.value);
-      
+
       if (this.initialValueSnapshot === null) {
         this.initialValueSnapshot = currentVal;
         this.lastPolledValue = currentVal;
@@ -439,17 +465,17 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         return;
       }
-      
+
       // Se il valore è cambiato rispetto all'ultimo controllo (intervento utente sui dati)
       if (currentVal !== this.lastPolledValue) {
         this.lastPolledValue = currentVal;
-        
+
         const shouldBeChecked = currentVal === this.initialValueSnapshot;
-        
+
         // Aggiorniamo il checkbox solo se lo stato calcolato è diverso da quello attuale
         if (this.saveAddress !== shouldBeChecked) {
-            this.saveAddress = shouldBeChecked;
-            this.cdr.detectChanges();
+          this.saveAddress = shouldBeChecked;
+          this.cdr.detectChanges();
         }
       }
     } catch {
@@ -518,7 +544,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.selectedSavedPaymentMethodId && (!this.isPaymentElementReady || !this.isPaymentElementComplete)) {
+    if (
+      !this.selectedSavedPaymentMethodId &&
+      (!this.isPaymentElementReady || !this.isPaymentElementComplete)
+    ) {
       this.snackbar.showWarning('Completa i dati di pagamento prima di proseguire.');
       return;
     }
@@ -540,7 +569,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         }),
       );
 
-      const confirmation = await this.stripeService.confirmPayment(this.selectedSavedPaymentMethodId ?? undefined);
+      const confirmation = await this.stripeService.confirmPayment(
+        this.selectedSavedPaymentMethodId ?? undefined,
+      );
       if (!confirmation.isSuccess) {
         this.paymentElementError =
           confirmation.message ?? 'Pagamento non riuscito. Verifica i dati e riprova.';
@@ -569,6 +600,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.isOrderConfirmed = true;
       this.confirmedOrderId = finalizeResult.orderId ?? null;
       this.confirmationMessage = finalizeResult.message ?? null;
+      this.ordersService.invalidateOrdersCache();
       await this.loadSavedPaymentMethods();
       this.snackbar.showInfo('Pagamento confermato con successo.');
       stepper.next();
@@ -585,8 +617,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return 'Errore inatteso durante la conferma del pagamento.';
     }
 
-    const apiMessage =
-      typeof error.error?.message === 'string' ? error.error.message : null;
+    const apiMessage = typeof error.error?.message === 'string' ? error.error.message : null;
 
     if (apiMessage) {
       return apiMessage;

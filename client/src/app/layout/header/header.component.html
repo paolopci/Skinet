@@ -67,10 +67,17 @@
     <mat-icon>shopping_cart</mat-icon>
     <span>My cart</span>
   </button>
-  <button mat-menu-item disabled>
-    <mat-icon>receipt_long</mat-icon>
-    <span>My orders</span>
-  </button>
+  @if (hasOrders() === true) {
+    <button mat-menu-item routerLink="/account/orders">
+      <mat-icon>receipt_long</mat-icon>
+      <span>My orders</span>
+    </button>
+  } @else {
+    <button mat-menu-item disabled>
+      <mat-icon>receipt_long</mat-icon>
+      <span>My orders</span>
+    </button>
+  }
   <button mat-menu-item routerLink="/account/payment-methods">
     <mat-icon>credit_card</mat-icon>
     <span>Saved cards</span>
@@ -111,10 +118,17 @@
       <mat-icon>shopping_cart</mat-icon>
       <span>My cart</span>
     </button>
-    <button mat-menu-item disabled>
-      <mat-icon>receipt_long</mat-icon>
-      <span>My orders</span>
-    </button>
+    @if (hasOrders() === true) {
+      <button mat-menu-item routerLink="/account/orders">
+        <mat-icon>receipt_long</mat-icon>
+        <span>My orders</span>
+      </button>
+    } @else {
+      <button mat-menu-item disabled>
+        <mat-icon>receipt_long</mat-icon>
+        <span>My orders</span>
+      </button>
+    }
     <button mat-menu-item routerLink="/account/payment-methods">
       <mat-icon>credit_card</mat-icon>
       <span>Saved cards</span>
