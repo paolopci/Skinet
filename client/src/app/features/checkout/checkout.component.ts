@@ -44,9 +44,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   isReturningToAddress = false;
   pendingAddressReload = false;
   isLoadingPaymentElement = false;
+  isProcessingPayment = false;
   isPaymentElementReady = false;
   isPaymentElementComplete = false;
   paymentElementError: string | null = null;
+  isOrderConfirmed = false;
+  confirmedOrderId: number | null = null;
+  confirmationMessage: string | null = null;
   private initialValueSnapshot: string | null = null;
   private lastPolledValue: string | null = null;
   private addressPollingTimerId: ReturnType<typeof setInterval> | null = null;
@@ -438,5 +442,82 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
     });
+  }
+
+  async proceedToConfirmation(stepper: MatStepper): Promise<void> {
+    if (this.isProcessingPayment) {
+      return;
+    }
+
+    if (!this.isPaymentElementReady || !this.isPaymentElementComplete) {
+      this.snackbar.showWarning('Completa i dati di pagamento prima di proseguire.');
+      return;
+    }
+
+    const cart = this.cartService.cart();
+    if (!cart?.id) {
+      this.snackbar.showError('Carrello non disponibile. Ricarica la pagina e riprova.');
+      return;
+    }
+
+    this.isProcessingPayment = true;
+    this.paymentElementError = null;
+
+    try {
+      const confirmation = await this.stripeService.confirmPayment();
+      if (!confirmation.isSuccess) {
+        this.paymentElementError =
+          confirmation.message ?? 'Pagamento non riuscito. Verifica i dati e riprova.';
+        return;
+      }
+
+      const finalizeResult = await firstValueFrom(
+        this.stripeService.finalizePayment(cart.id, confirmation.paymentIntentId),
+      );
+
+      if (!finalizeResult.isSuccess) {
+        this.paymentElementError =
+          finalizeResult.message ?? 'Pagamento non finalizzato lato server. Riprova.';
+        return;
+      }
+
+      this.isOrderConfirmed = true;
+      this.confirmedOrderId = finalizeResult.orderId ?? null;
+      this.confirmationMessage = finalizeResult.message ?? null;
+      this.snackbar.showInfo('Pagamento confermato con successo.');
+      stepper.next();
+    } catch (error) {
+      this.paymentElementError = this.extractPaymentErrorMessage(error);
+    } finally {
+      this.isProcessingPayment = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private extractPaymentErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Errore inatteso durante la conferma del pagamento.';
+    }
+
+    const apiMessage =
+      typeof error.error?.message === 'string' ? error.error.message : null;
+
+    if (apiMessage) {
+      return apiMessage;
+    }
+
+    if (error.status === 409) {
+      return 'Pagamento non ancora confermato. Riprova tra qualche secondo.';
+    }
+
+    if (error.status === 502) {
+      return 'Errore temporaneo del provider di pagamento. Riprova.';
+    }
+
+    if (error.status === 403) {
+      return 'Operazione non autorizzata sul pagamento corrente.';
+    }
+
+    return 'Impossibile finalizzare il pagamento. Riprova.';
   }
 }

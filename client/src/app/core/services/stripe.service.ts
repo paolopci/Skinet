@@ -1,10 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import {
   loadStripe,
+  PaymentIntent,
   Stripe,
   StripeAddressElement,
   StripeAddressElementOptions,
   StripeElements,
+  StripeError,
   StripePaymentElement,
   StripePaymentElementOptions,
 } from '@stripe/stripe-js';
@@ -33,6 +35,9 @@ export class StripeService {
   private addressElement?: StripeAddressElement;
   private paymentElement?: StripePaymentElement;
   private lastUserEmail?: string;
+
+  private static readonly paymentErrorFallbackMessage =
+    'Pagamento non riuscito. Verifica i dati e riprova.';
 
   private getPublicKey(): string {
     if (!this.publicKey) {
@@ -214,4 +219,131 @@ export class StripeService {
       }),
     );
   }
+
+  async confirmPayment(): Promise<PaymentConfirmationResult> {
+    const stripe = await this.getStripe();
+    if (!stripe) {
+      return {
+        isSuccess: false,
+        status: 'stripe_not_loaded',
+        message: 'Stripe non è stato caricato correttamente.',
+      };
+    }
+
+    if (!this.elements) {
+      return {
+        isSuccess: false,
+        status: 'missing_elements',
+        message: 'Elementi di pagamento non inizializzati.',
+      };
+    }
+
+    const submitResult = await this.elements.submit();
+    if (submitResult.error) {
+      return {
+        isSuccess: false,
+        status: submitResult.error.code ?? 'submit_error',
+        message: this.mapStripeError(submitResult.error),
+      };
+    }
+
+    const result = await stripe.confirmPayment({
+      elements: this.elements,
+      redirect: 'if_required',
+    });
+
+    if (result.error) {
+      return {
+        isSuccess: false,
+        status: result.error.code ?? 'confirm_error',
+        message: this.mapStripeError(result.error),
+      };
+    }
+
+    const paymentIntent = result.paymentIntent;
+    if (!paymentIntent) {
+      return {
+        isSuccess: false,
+        status: 'missing_payment_intent',
+        message: 'Stripe non ha restituito un PaymentIntent valido.',
+      };
+    }
+
+    if (paymentIntent.status !== 'succeeded') {
+      return {
+        isSuccess: false,
+        status: paymentIntent.status,
+        paymentIntentId: paymentIntent.id,
+        message: this.mapPaymentIntentStatus(paymentIntent),
+      };
+    }
+
+    return {
+      isSuccess: true,
+      status: paymentIntent.status,
+      paymentIntentId: paymentIntent.id,
+    };
+  }
+
+  finalizePayment(cartId: string, paymentIntentId?: string) {
+    return this.http.post<FinalizePaymentResponse>(`${this.baseUrl}payments/${cartId}/finalize`, {
+      paymentIntentId,
+    });
+  }
+
+  private mapStripeError(error: StripeError): string {
+    const code = error.code ?? '';
+    if (code === 'card_declined') {
+      return 'Carta rifiutata. Usa un metodo di pagamento diverso.';
+    }
+
+    if (code === 'authentication_required') {
+      return 'Autenticazione richiesta. Completa la verifica 3D Secure.';
+    }
+
+    if (code === 'expired_card') {
+      return 'Carta scaduta. Aggiorna i dati della carta.';
+    }
+
+    if (code === 'incorrect_cvc') {
+      return 'CVC non valido. Controlla il codice di sicurezza.';
+    }
+
+    if (code === 'processing_error') {
+      return 'Errore temporaneo del provider di pagamento. Riprova tra poco.';
+    }
+
+    return error.message ?? StripeService.paymentErrorFallbackMessage;
+  }
+
+  private mapPaymentIntentStatus(paymentIntent: PaymentIntent): string {
+    if (paymentIntent.status === 'requires_action') {
+      return 'Autenticazione aggiuntiva richiesta. Completa la verifica e riprova.';
+    }
+
+    if (paymentIntent.status === 'requires_payment_method') {
+      return 'Metodo di pagamento non valido o rifiutato.';
+    }
+
+    if (paymentIntent.status === 'processing') {
+      return 'Pagamento in elaborazione. Attendi qualche secondo e riprova.';
+    }
+
+    return `Pagamento non completato. Stato corrente: ${paymentIntent.status}.`;
+  }
 }
+
+export type PaymentConfirmationResult = {
+  isSuccess: boolean;
+  paymentIntentId?: string;
+  status?: string;
+  message?: string;
+};
+
+export type FinalizePaymentResponse = {
+  isSuccess: boolean;
+  status: string;
+  orderId?: number;
+  paymentIntentId?: string;
+  message?: string;
+};
