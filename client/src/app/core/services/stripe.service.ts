@@ -187,13 +187,20 @@ export class StripeService {
     if (!this.paymentElement) {
       const elements = await this.initializeElements();
       if (elements) {
-        const options: StripePaymentElementOptions = {
+        const optionsWithLinkDisabled: StripePaymentElementOptions = {
           layout: 'tabs',
           wallets: {
             link: 'never',
           },
         };
-        this.paymentElement = elements.create('payment', options);
+        try {
+          this.paymentElement = elements.create('payment', optionsWithLinkDisabled);
+        } catch {
+          const fallbackOptions: StripePaymentElementOptions = {
+            layout: 'tabs',
+          };
+          this.paymentElement = elements.create('payment', fallbackOptions);
+        }
       } else {
         throw new Error('Elements instance has not been loaded');
       }
