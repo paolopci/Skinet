@@ -1,9 +1,9 @@
 using System;
-using Core.Entities;
+using Core.Payments;
 
 namespace Core.Interfaces;
 
 public interface IPaymentService
 {
-    Task<ShoppingCart?> CreateUpdatePaymentIntent(string cartId);
+    Task<PaymentIntentOperationResult> CreateUpdatePaymentIntent(string cartId, string? userId);
 }
