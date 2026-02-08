@@ -189,6 +189,9 @@ export class StripeService {
       if (elements) {
         const options: StripePaymentElementOptions = {
           layout: 'tabs',
+          wallets: {
+            link: 'never',
+          },
         };
         this.paymentElement = elements.create('payment', options);
       } else {
