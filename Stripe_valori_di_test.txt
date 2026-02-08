@@ -27,4 +27,4 @@ Per testare errori specifici:
 Carta rifiutata: 4000 0000 0000 0002
 3DS richiesto: 4000 0025 0000 3155
 
-Salvataggio e Gestione Carte Stripe: 
+Backend: Gestione Ordini: 

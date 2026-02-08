@@ -12,6 +12,7 @@ public interface ISpecification<T>
     Expression<Func<T, object>>? OrderBy { get; }
     // Ordinamento discendente opzionale.
     Expression<Func<T, object>>? OrderByDescending { get; }
+    List<Expression<Func<T, object>>> Includes { get; }
 
     int Take { get; }
     int Skip { get; }
