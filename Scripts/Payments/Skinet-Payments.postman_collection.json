@@ -1,0 +1,762 @@
+{
+  "info": {
+    "name": "Skinet - Payments",
+    "_postman_id": "f39de4d2-2d77-4cca-b5cc-0f90f3b8bdb3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test flussi Payments. Sequenza raccomandata: Setup -> Happy Path -> Negative Path -> Cleanup."
+  },
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "01 - Setup - Account - Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Token presente\", function () {",
+                  "  pm.expect(data.token).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set(\"authToken\", data.token);",
+                  "pm.environment.set(\"authToken\", data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Setup - Cart - Update Cart (small price)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{cartId}}\",\n  \"items\": [\n    {\n      \"productId\": {{productId}},\n      \"productName\": \"{{productName}}\",\n      \"price\": {{smallPriceA}},\n      \"quantity\": {{quantityA}},\n      \"pictureUrl\": \"{{pictureUrl}}\",\n      \"brand\": \"{{brand}}\",\n      \"type\": \"{{type}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Carrello valido\", function () {",
+                  "  pm.expect(data.id).to.eql(pm.collectionVariables.get(\"cartId\"));",
+                  "  pm.expect(data.items).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Setup - Payments - Get Delivery Methods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/delivery-methods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "delivery-methods"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Lista delivery methods\", function () {",
+                  "  pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "if (data.length > 0 && data[0].id) {",
+                  "  pm.collectionVariables.set(\"deliveryMethodId\", data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Setup - Cart - Update Cart with DeliveryMethod",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{cartId}}\",\n  \"deliverMethodId\": {{deliveryMethodId}},\n  \"items\": [\n    {\n      \"productId\": {{productId}},\n      \"productName\": \"{{productName}}\",\n      \"price\": {{smallPriceB}},\n      \"quantity\": {{quantityB}},\n      \"pictureUrl\": \"{{pictureUrl}}\",\n      \"brand\": \"{{brand}}\",\n      \"type\": \"{{type}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Preparazione contesto: login, carrello e delivery method."
+    },
+    {
+      "name": "Payments - Happy Path",
+      "item": [
+        {
+          "name": "05 - Happy Path - Create or Update Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"authToken\")) {",
+                  "  pm.test(\"Skip: authToken mancante\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Campi Stripe valorizzati\", function () {",
+                  "  pm.expect(data.paymentIntentId).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.clientSecret).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set(\"paymentIntentId\", data.paymentIntentId);",
+                  "pm.collectionVariables.set(\"clientSecret\", data.clientSecret);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Happy Path - Create or Update Payment Intent Again",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"authToken\")) {",
+                  "  pm.test(\"Skip: authToken mancante\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"PaymentIntent ancora presente\", function () {",
+                  "  pm.expect(data.paymentIntentId).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(data.clientSecret).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Flusso positivo con creazione/aggiornamento payment intent."
+    },
+    {
+      "name": "Payments - Negative Path",
+      "item": [
+        {
+          "name": "07 - Negative - Create Payment Intent Without Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.cookies.jar().clear(pm.environment.get(\"baseUrl\"), function () {});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Negative - Create Payment Intent Invalid CartId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{invalidCartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{invalidCartId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"authToken\")) {",
+                  "  pm.test(\"Skip: authToken mancante\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 404\", function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Negative - Cart - Update Cart Invalid DeliveryMethod",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{cartId}}\",\n  \"deliverMethodId\": {{invalidDeliveryMethodId}},\n  \"items\": [\n    {\n      \"productId\": {{productId}},\n      \"productName\": \"{{productName}}\",\n      \"price\": {{smallPriceC}},\n      \"quantity\": {{quantityC}},\n      \"pictureUrl\": \"{{pictureUrl}}\",\n      \"brand\": \"{{brand}}\",\n      \"type\": \"{{type}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Negative - Create Payment Intent With Invalid DeliveryMethod",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"authToken\")) {",
+                  "  pm.test(\"Skip: authToken mancante\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Flusso negativo: token mancante, cartId/delivery invalidi."
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "11 - Cleanup - Cart - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cart?id={{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{cartId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Pulizia finale del carrello di test."
+    },
+    {
+      "name": "Payments - Saved Methods",
+      "description": "Test endpoint gestione carte salvate (lista/default/delete).",
+      "item": [
+        {
+          "name": "12 - Saved Methods - Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200/401/403\", function () {",
+                  "  pm.expect([200, 401, 403]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code !== 200) {",
+                  "  return;",
+                  "}",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Lista payment methods\", function () {",
+                  "  pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "if (Array.isArray(data) && data.length > 0) {",
+                  "  pm.collectionVariables.set(\"savedPaymentMethodId\", data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 - Saved Methods - Set Default Payment Method",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods/{{savedPaymentMethodId}}/default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods",
+                "{{savedPaymentMethodId}}",
+                "default"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"savedPaymentMethodId\")) {",
+                  "  pm.test(\"Skip: no saved payment method\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 - Saved Methods - Delete Payment Method",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods/{{savedPaymentMethodId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods",
+                "{{savedPaymentMethodId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"savedPaymentMethodId\")) {",
+                  "  pm.test(\"Skip: no saved payment method\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "pm.collectionVariables.unset(\"savedPaymentMethodId\");"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:5001"
+    },
+    {
+      "key": "userEmail",
+      "value": "paolopci@yahoo.it"
+    },
+    {
+      "key": "userPassword",
+      "value": "Micene@65"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "cartId",
+      "value": "cart1"
+    },
+    {
+      "key": "invalidCartId",
+      "value": "cart-does-not-exist-999"
+    },
+    {
+      "key": "productId",
+      "value": "2"
+    },
+    {
+      "key": "productName",
+      "value": "Test product"
+    },
+    {
+      "key": "pictureUrl",
+      "value": "https://localhost:5001/images/products/placeholder.png"
+    },
+    {
+      "key": "brand",
+      "value": "Test brand"
+    },
+    {
+      "key": "type",
+      "value": "Test type"
+    },
+    {
+      "key": "smallPriceA",
+      "value": "1"
+    },
+    {
+      "key": "smallPriceB",
+      "value": "0.5"
+    },
+    {
+      "key": "smallPriceC",
+      "value": "2"
+    },
+    {
+      "key": "quantityA",
+      "value": "1"
+    },
+    {
+      "key": "quantityB",
+      "value": "2"
+    },
+    {
+      "key": "quantityC",
+      "value": "1"
+    },
+    {
+      "key": "deliveryMethodId",
+      "value": "1"
+    },
+    {
+      "key": "invalidDeliveryMethodId",
+      "value": "999999"
+    },
+    {
+      "key": "paymentIntentId",
+      "value": ""
+    },
+    {
+      "key": "clientSecret",
+      "value": ""
+    },
+    {
+      "key": "stripeSecretKey",
+      "value": ""
+    },
+    {
+      "key": "stripePublishableKey",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title id="order-details-title">Dettaglio ordine</h2>
+    <button mat-icon-button type="button" aria-label="Chiudi dettaglio ordine" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div mat-dialog-content class="dialog-content">
+    @if (isLoading()) {
+      <div class="state-box">Caricamento dettaglio ordine...</div>
+    } @else if (errorMessage()) {
+      <div class="state-box state-error">
+        <p>{{ errorMessage() }}</p>
+        <button mat-stroked-button type="button" (click)="retry()">Riprova</button>
+      </div>
+    } @else if (details(); as order) {
+      <section class="order-meta">
+        <div><strong>Ordine #</strong> {{ order.orderId }}</div>
+        <div><strong>Data:</strong> {{ order.data }}</div>
+        <div><strong>Stato:</strong> <span class="capitalize">{{ order.stato }}</span></div>
+        <div><strong>Totale:</strong> {{ order.importo | number: '1.2-2' }}</div>
+        <div><strong>Pagamento:</strong> {{ order.tipoPagamento }}</div>
+        @if (order.numeroCarta) {
+          <div><strong>Carta:</strong> {{ order.numeroCarta }}</div>
+        }
+      </section>
+
+      @if (order.dettagli.length === 0) {
+        <div class="state-box">Nessun prodotto disponibile per questo ordine.</div>
+      } @else {
+        <div class="items-table-wrapper">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Prodotto</th>
+                <th>Quantità</th>
+                <th>Prezzo unitario</th>
+                <th>Totale riga</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of order.dettagli; track item.prodottoId) {
+                <tr>
+                  <td>
+                    <div class="product-cell">
+                      <img
+                        [src]="item.immagineUrl || '/images/placeholder.png'"
+                        [alt]="item.nomeProdotto"
+                        loading="lazy"
+                      />
+                      <div>
+                        <div class="product-name">{{ item.nomeProdotto }}</div>
+                        <div class="product-id">ID: {{ item.prodottoId }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ item.quantita }}</td>
+                  <td>{{ item.prezzoUnitario | number: '1.2-2' }}</td>
+                  <td>{{ item.totaleRiga | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </div>
+
+  <mat-divider></mat-divider>
+  <div mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="close()">Chiudi</button>
+  </div>
+</div>

@@ -22,6 +22,7 @@ namespace API.Controllers
         IWebHostEnvironment env) : BaseApiController
     {
         private const string RefreshTokenCookieName = "refreshToken";
+        private static readonly HashSet<string> SupportedCountryCodes = ["IT", "US", "GB"];
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto registerDto)
         {
@@ -43,10 +44,14 @@ namespace API.Controllers
                 PhoneNumber = registerDto.PhoneNumber,
                 Address = new Address
                 {
-                    Street = registerDto.Address.Street,
-                    City = registerDto.Address.City,
-                    State = registerDto.Address.State,
-                    PostalCode = registerDto.Address.PostalCode
+                    FirstName = NormalizeRequired(registerDto.Address.FirstName),
+                    LastName = NormalizeRequired(registerDto.Address.LastName),
+                    AddressLine1 = NormalizeRequired(registerDto.Address.AddressLine1),
+                    AddressLine2 = NormalizeOptional(registerDto.Address.AddressLine2),
+                    City = NormalizeRequired(registerDto.Address.City),
+                    PostalCode = NormalizeRequired(registerDto.Address.PostalCode),
+                    CountryCode = NormalizeCountryCode(registerDto.Address.CountryCode),
+                    Region = NormalizeOptional(registerDto.Address.Region)
                 }
             };
 
@@ -96,7 +101,7 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, refreshToken.ExpiresAt);
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
@@ -130,7 +135,7 @@ namespace API.Controllers
                     null));
             }
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
@@ -183,7 +188,7 @@ namespace API.Controllers
             await userManager.UpdateAsync(user);
             SetRefreshTokenCookie(rawToken, newToken.ExpiresAt);
 
-            var jwtToken = tokenService.CreateToken(user);
+            var jwtToken = await tokenService.CreateTokenAsync(user);
             SetAccessTokenCookie(jwtToken, DateTime.UtcNow.AddDays(7));
 
             return Ok(new UserDto
@@ -260,6 +265,55 @@ namespace API.Controllers
             return HttpContext.Connection.RemoteIpAddress?.ToString();
         }
 
+        private static string NormalizeRequired(string? value)
+        {
+            return value?.Trim() ?? string.Empty;
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            var normalized = value?.Trim();
+            return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+        }
+
+        private static string NormalizeCountryCode(string? countryCode)
+        {
+            return NormalizeRequired(countryCode).ToUpperInvariant();
+        }
+
+        private static Dictionary<string, string[]> ValidateNormalizedAddress(Address address)
+        {
+            var errors = new Dictionary<string, string[]>();
+
+            if (string.IsNullOrWhiteSpace(address.FirstName))
+                errors["firstName"] = ["Il campo FirstName è obbligatorio."];
+            if (string.IsNullOrWhiteSpace(address.LastName))
+                errors["lastName"] = ["Il campo LastName è obbligatorio."];
+            if (string.IsNullOrWhiteSpace(address.AddressLine1))
+                errors["addressLine1"] = ["Il campo AddressLine1 è obbligatorio."];
+            if (string.IsNullOrWhiteSpace(address.City))
+                errors["city"] = ["Il campo City è obbligatorio."];
+            if (string.IsNullOrWhiteSpace(address.PostalCode))
+                errors["postalCode"] = ["Il campo PostalCode è obbligatorio."];
+
+            if (string.IsNullOrWhiteSpace(address.CountryCode) || address.CountryCode.Length != 2)
+            {
+                errors["countryCode"] = ["CountryCode deve essere un codice ISO a 2 caratteri."];
+            }
+            else if (!SupportedCountryCodes.Contains(address.CountryCode))
+            {
+                errors["countryCode"] = ["CountryCode non supportato."];
+            }
+
+            var isRegionRequired = address.CountryCode is "IT" or "US";
+            if (isRegionRequired && string.IsNullOrWhiteSpace(address.Region))
+            {
+                errors["region"] = ["Region è obbligatorio per il paese selezionato."];
+            }
+
+            return errors;
+        }
+
         [Authorize]
         [HttpGet("address")]
         public async Task<ActionResult<AddressDto>> GetAddress()
@@ -292,10 +346,14 @@ namespace API.Controllers
 
             return Ok(new AddressDto
             {
-                Street = user.Address.Street,
+                FirstName = user.Address.FirstName,
+                LastName = user.Address.LastName,
+                AddressLine1 = user.Address.AddressLine1,
+                AddressLine2 = user.Address.AddressLine2,
                 City = user.Address.City,
-                State = user.Address.State,
-                PostalCode = user.Address.PostalCode
+                PostalCode = user.Address.PostalCode,
+                CountryCode = user.Address.CountryCode,
+                Region = user.Address.Region
             });
         }
 
@@ -321,13 +379,25 @@ namespace API.Controllers
                     null));
             }
 
-            user.Address = new Address
+            var normalizedAddress = new Address
             {
-                Street = updateAddressDto.Street,
-                City = updateAddressDto.City,
-                State = updateAddressDto.State,
-                PostalCode = updateAddressDto.PostalCode
+                FirstName = NormalizeRequired(updateAddressDto.FirstName),
+                LastName = NormalizeRequired(updateAddressDto.LastName),
+                AddressLine1 = NormalizeRequired(updateAddressDto.AddressLine1),
+                AddressLine2 = NormalizeOptional(updateAddressDto.AddressLine2),
+                City = NormalizeRequired(updateAddressDto.City),
+                PostalCode = NormalizeRequired(updateAddressDto.PostalCode),
+                CountryCode = NormalizeCountryCode(updateAddressDto.CountryCode),
+                Region = NormalizeOptional(updateAddressDto.Region)
             };
+
+            var validationErrors = ValidateNormalizedAddress(normalizedAddress);
+            if (validationErrors.Count > 0)
+            {
+                return BadRequest(new ApiValidationErrorResponse(StatusCodes.Status400BadRequest, validationErrors));
+            }
+
+            user.Address = normalizedAddress;
 
             var result = await userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -338,10 +408,14 @@ namespace API.Controllers
 
             return Ok(new AddressDto
             {
-                Street = user.Address.Street,
+                FirstName = user.Address.FirstName,
+                LastName = user.Address.LastName,
+                AddressLine1 = user.Address.AddressLine1,
+                AddressLine2 = user.Address.AddressLine2,
                 City = user.Address.City,
-                State = user.Address.State,
-                PostalCode = user.Address.PostalCode
+                PostalCode = user.Address.PostalCode,
+                CountryCode = user.Address.CountryCode,
+                Region = user.Address.Region
             });
         }
 

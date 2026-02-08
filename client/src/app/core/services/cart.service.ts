@@ -3,14 +3,19 @@ import { environment } from '../../../environments/environment.development';
 import { HttpClient } from '@angular/common/http';
 import { Cart, CartItem } from '../../shared/models/cart';
 import { Product } from '../../shared/models/product';
+import { SnackbarService } from './snackbar.service';
+import { AuthStateService } from './auth-state.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CartService {
-  private readonly cartIdKey = 'cart_id';
+  private readonly legacyCartIdKey = 'cart_id';
+  private readonly guestCartIdKey = 'cart_id_guest';
   baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
+  private snackbar = inject(SnackbarService);
+  private authState = inject(AuthStateService);
 
   cart = signal<Cart | null>(null);
   // Totale pezzi nel carrello (somma delle quantita per item).
@@ -20,7 +25,7 @@ export class CartService {
 
   // Carica il carrello persistito (se presente) all'avvio dell'app.
   loadCart() {
-    const cartId = localStorage.getItem(this.cartIdKey);
+    const cartId = this.getPersistedCartId();
     if (!cartId) {
       return;
     }
@@ -54,6 +59,24 @@ export class CartService {
     return this.http.delete(`${this.baseUrl}cart?id=${id}`).subscribe({
       next: () => {
         this.updateCartState(null);
+      },
+      error: (error) => {
+        console.log(error);
+      },
+      });
+  }
+
+  clearClientCartState() {
+    this.updateCartState(null);
+    // Compatibilità con vecchie chiavi locali
+    localStorage.removeItem(this.legacyCartIdKey);
+  }
+
+  mergeCart(guestCartId: string) {
+    return this.http.post<Cart>(`${this.baseUrl}cart/merge`, { guestCartId }).subscribe({
+      next: (updatedCart) => {
+        this.updateCartState(updatedCart);
+        this.snackbar.showInfo('Carrello sincronizzato');
       },
       error: (error) => {
         console.log(error);
@@ -186,10 +209,33 @@ export class CartService {
     this.cart.set(cart);
 
     // Persistenza locale dell'id carrello per recupero successivo.
+    const storageKey = this.getScopedCartStorageKey();
     if (cart?.id) {
-      localStorage.setItem(this.cartIdKey, cart.id);
+      localStorage.setItem(storageKey, cart.id);
     } else {
-      localStorage.removeItem(this.cartIdKey);
+      localStorage.removeItem(storageKey);
     }
+  }
+
+  private getPersistedCartId() {
+    const userEmail = this.authState.user()?.email;
+    if (userEmail) {
+      return localStorage.getItem(this.buildUserCartStorageKey(userEmail));
+    }
+
+    return localStorage.getItem(this.guestCartIdKey) ?? localStorage.getItem(this.legacyCartIdKey);
+  }
+
+  private getScopedCartStorageKey() {
+    const userEmail = this.authState.user()?.email;
+    return userEmail ? this.buildUserCartStorageKey(userEmail) : this.guestCartIdKey;
+  }
+
+  private buildUserCartStorageKey(email: string) {
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '_');
+    return `cart_id_user_${normalizedEmail}`;
   }
 }

@@ -1,0 +1,3 @@
+Get-NetTCPConnection -LocalPort 5000,5001 -State Listen | Select LocalPort,OwningProcess
+Stop-Process -Id <PID> -Force
+dotnet watch --project API/API.csproj

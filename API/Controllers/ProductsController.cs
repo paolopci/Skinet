@@ -3,6 +3,7 @@ using API.RequestHelpers;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -58,6 +59,7 @@ namespace API.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost] // api/products
         public async Task<ActionResult<Product>> CreateProduct([FromBody] Product model)
         {
@@ -84,6 +86,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = newProduct.Id }, newProduct);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id:int}")] // api/products/5
         public async Task<ActionResult<Product>> UpdateProduct(int id, [FromBody] Product model)
         {
@@ -118,6 +121,7 @@ namespace API.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")] // api/products/5
         public async Task<IActionResult> DeleteProduct(int id)
         {

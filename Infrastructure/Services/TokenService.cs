@@ -5,14 +5,15 @@ using System.Security.Cryptography;
 using System.Text;
 using Core.Entities;
 using Core.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Services;
 
-public class TokenService(IConfiguration config) : ITokenService
+public class TokenService(IConfiguration config, UserManager<AppUser> userManager) : ITokenService
 {
-    public string CreateToken(AppUser user)
+    public async Task<string> CreateTokenAsync(AppUser user)
     {
         var key = config["Jwt:Key"];
         var issuer = config["Jwt:Issuer"];
@@ -30,6 +31,12 @@ public class TokenService(IConfiguration config) : ITokenService
             new(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
             new(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty)
         };
+
+        var roles = await userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var keyBytes = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var creds = new SigningCredentials(keyBytes, SecurityAlgorithms.HmacSha256);

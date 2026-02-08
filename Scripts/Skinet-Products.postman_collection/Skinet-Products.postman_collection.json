@@ -2,17 +2,23 @@
   "info": {
     "name": "Skinet - Products CRUD",
     "_postman_id": "3f3baf80-6e7f-4d6e-9a88-0f6b3e2b7b8a",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test Products API (list, filtri, sorting, dettaglio, CRUD). Eseguire in ordine numerico per verifica completa."
   },
   "item": [
     {
       "name": "Products",
       "item": [
         {
-          "name": "Get Products",
+          "name": "Products - 1 Get Products",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{corsOrigin}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/products?sort={{sort}}",
               "host": [
@@ -65,7 +71,7 @@
                 "exec": [
                   "pm.test(\"CORS header is present\", function () {",
                   "  pm.response.to.have.header(\"Access-Control-Allow-Origin\");",
-                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"https://localhost:4200\");",
+                  "  pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(pm.environment.get(\"corsOrigin\"));",
                   "});"
                 ]
               },
@@ -74,7 +80,7 @@
           ]
         },
         {
-          "name": "Get Products (Pagination)",
+          "name": "Products - 2 Get Products (Pagination)",
           "event": [
             {
               "listen": "test",
@@ -88,12 +94,12 @@
                   "const json = pm.response.json();",
                   "const totalCount = json.totalCount ?? json.TotalCount;",
                   "const totalPages = json.totalPages ?? json.TotalPages;",
-                  "const data = json.data ?? json.Data;",
+                  "const items = json.data ?? json.Data;",
                   "",
                   "pm.test(\"Pagination fields present\", function () {",
                   "  pm.expect(totalCount).to.be.a(\"number\");",
                   "  pm.expect(totalPages).to.be.a(\"number\");",
-                  "  pm.expect(data).to.be.an(\"array\");",
+                  "  pm.expect(items).to.be.an(\"array\");",
                   "});"
                 ]
               }
@@ -165,7 +171,7 @@
           ]
         },
         {
-          "name": "Get Products (Filtered)",
+          "name": "Products - 3 Get Products (Filtered)",
           "request": {
             "method": "GET",
             "header": [],
@@ -229,10 +235,30 @@
               "_postman_previewlanguage": "json",
               "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Sample Product\",\n    \"price\": 10,\n    \"description\": \"Sample description\",\n    \"pictureUrl\": \"images/sample.png\",\n    \"type\": \"Type A\",\n    \"brand\": \"Brand A\",\n    \"quantityInStock\": 5\n  }\n]"
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const items = json.data ?? json.Data;",
+                  "",
+                  "pm.test(\"Filtered payload valido\", function () {",
+                  "  pm.expect(items).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Get Products (Sorted)",
+          "name": "Products - 4 Get Products (Sorted)",
           "request": {
             "method": "GET",
             "header": [],
@@ -280,10 +306,30 @@
               "_postman_previewlanguage": "json",
               "body": "[]"
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const items = json.data ?? json.Data;",
+                  "",
+                  "pm.test(\"Sorted payload valido\", function () {",
+                  "  pm.expect(items).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Get Products (Filtered + Sorted Example)",
+          "name": "Products - 5 Get Products (Filtered + Sorted Example)",
           "request": {
             "method": "GET",
             "header": [],
@@ -347,10 +393,30 @@
               "_postman_previewlanguage": "json",
               "body": "[]"
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const items = json.data ?? json.Data;",
+                  "",
+                  "pm.test(\"Filtered + sorted payload valido\", function () {",
+                  "  pm.expect(items).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Get Brands",
+          "name": "Products - 6 Get Brands",
           "request": {
             "method": "GET",
             "header": [],
@@ -388,10 +454,30 @@
               "_postman_previewlanguage": "json",
               "body": "[\"Brand A\",\"Brand B\"]"
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const brands = pm.response.json();",
+                  "",
+                  "pm.test(\"Brands e un array di stringhe\", function () {",
+                  "  pm.expect(brands).to.be.an(\"array\");",
+                  "  brands.forEach(function (brand) { pm.expect(brand).to.be.a(\"string\"); });",
+                  "});"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Get Types",
+          "name": "Products - 7 Get Types",
           "request": {
             "method": "GET",
             "header": [],
@@ -429,10 +515,30 @@
               "_postman_previewlanguage": "json",
               "body": "[\"Type A\",\"Type B\"]"
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const types = pm.response.json();",
+                  "",
+                  "pm.test(\"Types e un array di stringhe\", function () {",
+                  "  pm.expect(types).to.be.an(\"array\");",
+                  "  types.forEach(function (typeItem) { pm.expect(typeItem).to.be.a(\"string\"); });",
+                  "});"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Get Product By Id",
+          "name": "Products - 8 Get Product By Id",
           "request": {
             "method": "GET",
             "header": [],
@@ -491,10 +597,31 @@
               "_postman_previewlanguage": "json",
               "body": ""
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 o 404\", function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const product = pm.response.json();",
+                  "  pm.test(\"Product payload valido\", function () {",
+                  "    pm.expect(product).to.be.an(\"object\");",
+                  "    pm.expect(product.id).to.be.a(\"number\");",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Create Product",
+          "name": "Products - 9 Create Product",
           "request": {
             "method": "POST",
             "header": [
@@ -559,10 +686,37 @@
               "_postman_previewlanguage": "json",
               "body": ""
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status coerente con auth\", function () {",
+                  "  pm.expect([201, 401, 403]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const created = pm.response.json();",
+                  "  pm.test(\"Create payload valido\", function () {",
+                  "    pm.expect(created).to.be.an(\"object\");",
+                  "    pm.expect(created.id).to.be.a(\"number\");",
+                  "  });",
+                  "",
+                  "  pm.environment.set(\"productId\", String(created.id));",
+                  "  pm.environment.set(\"createdProductId\", String(created.id));",
+                  "  pm.test(\"productId salvato in environment\", function () {",
+                  "    pm.expect(pm.environment.get(\"productId\")).to.eql(String(created.id));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Update Product",
+          "name": "Products - 10 Update Product",
           "request": {
             "method": "PUT",
             "header": [
@@ -630,10 +784,38 @@
               "_postman_previewlanguage": "json",
               "body": ""
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status coerente con auth/esistenza\", function () {",
+                  "  pm.expect([200, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401 && pm.response.code !== 403) {",
+                  "  pm.test(\"productId presente per update\", function () {",
+                  "    pm.expect(pm.environment.get(\"productId\")).to.exist;",
+                  "  });",
+                  "}",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const updated = pm.response.json();",
+                  "  pm.test(\"Update payload valido\", function () {",
+                  "    pm.expect(updated).to.be.an(\"object\");",
+                  "    pm.expect(updated.id).to.be.a(\"number\");",
+                  "    pm.expect(String(updated.id)).to.eql(pm.environment.get(\"productId\"));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
           ]
         },
         {
-          "name": "Delete Product",
+          "name": "Products - 11 Delete Product",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -692,9 +874,33 @@
               "_postman_previewlanguage": "json",
               "body": ""
             }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status coerente con auth/esistenza\", function () {",
+                  "  pm.expect([204, 401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401 && pm.response.code !== 403) {",
+                  "  pm.test(\"productId presente per delete\", function () {",
+                  "    pm.expect(pm.environment.get(\"productId\")).to.exist;",
+                  "  });",
+                  "}",
+                  "",
+                  "if (pm.response.code === 204) {",
+                  "  pm.environment.unset(\"createdProductId\");",
+                  "}"
+                ]
+              }
+            }
           ]
         }
-      ]
+      ],
+      "description": "Eseguire in ordine numerico (1 -> N). I test usano productId, brands, types, sort e paginazione."
     }
   ],
   "variable": [

@@ -2,14 +2,15 @@
   "info": {
     "name": "Skinet - Cart",
     "_postman_id": "a8c9b8f1-1c6c-4db1-bb8c-9a2e1f5e2d3a",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test Cart API. Flusso consigliato: GET cart, UPDATE cart, DELETE cart."
   },
   "item": [
     {
       "name": "Cart",
       "item": [
         {
-          "name": "Get Cart",
+          "name": "Cart - 1 Get Cart",
           "request": {
             "method": "GET",
             "header": [],
@@ -73,7 +74,7 @@
           ]
         },
         {
-          "name": "Update Cart",
+          "name": "Cart - 2 Update Cart",
           "request": {
             "method": "POST",
             "header": [
@@ -164,7 +165,7 @@
           ]
         },
         {
-          "name": "Delete Cart",
+          "name": "Cart - 3 Delete Cart",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -253,7 +254,8 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Eseguire in ordine numerico (1 -> N). Le request condividono cartId e dati prodotto di test."
     }
   ],
   "variable": [

@@ -1,0 +1,119 @@
+<section class="mx-auto mt-24 max-w-6xl px-4">
+  <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-800">My orders</h1>
+      <p class="text-sm text-slate-600">Visualizza e filtra i tuoi ordini.</p>
+    </div>
+    <div class="grid grid-cols-1 gap-2 md:grid-cols-4 md:items-end">
+      <label class="filter-field">
+        <span>Ordine data</span>
+        <select
+          [ngModel]="query().order"
+          (ngModelChange)="onSortOrderChange($event)"
+          class="h-10 rounded-md border border-slate-300 px-2"
+        >
+          <option value="desc">Più recente</option>
+          <option value="asc">Meno recente</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Trimestre</span>
+        <select
+          [ngModel]="query().quarter ?? ''"
+          (ngModelChange)="onQuarterChange($event)"
+          class="h-10 rounded-md border border-slate-300 px-2"
+        >
+          <option value="">Tutti</option>
+          <option value="1">Q1</option>
+          <option value="2">Q2</option>
+          <option value="3">Q3</option>
+          <option value="4">Q4</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Anno</span>
+        <select
+          [ngModel]="query().year ?? ''"
+          (ngModelChange)="onYearChange($event)"
+          class="h-10 rounded-md border border-slate-300 px-2"
+        >
+          <option value="">Tutti</option>
+          @for (year of years(); track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Cerca</span>
+        <input
+          type="search"
+          [ngModel]="query().search"
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="orderId o data"
+          class="h-10 rounded-md border border-slate-300 px-3"
+        />
+      </label>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="state-box">Caricamento ordini...</div>
+  } @else if (errorMessage()) {
+    <div class="state-box state-error">{{ errorMessage() }}</div>
+  } @else if (!hasOrders()) {
+    <div class="state-box">
+      {{
+        hasActiveFilters()
+          ? 'Nessun ordine trovato con i filtri selezionati.'
+          : 'Nessun ordine disponibile per questo account.'
+      }}
+    </div>
+  } @else {
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 text-left text-slate-700">
+          <tr>
+            <th class="px-4 py-3">OrderId</th>
+            <th class="px-4 py-3">Data</th>
+            <th class="px-4 py-3">Stato</th>
+            <th class="px-4 py-3">Importo</th>
+            <th class="px-4 py-3">Trimestre</th>
+            <th class="px-4 py-3">Anno</th>
+            <th class="px-4 py-3">Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of response().orders; track order.orderId) {
+            <tr class="border-t border-slate-100">
+              <td class="px-4 py-3 font-medium text-slate-800">{{ order.orderId }}</td>
+              <td class="px-4 py-3 text-slate-700">{{ order.data }}</td>
+              <td class="px-4 py-3 capitalize text-slate-700">{{ order.stato }}</td>
+              <td class="px-4 py-3 text-slate-700">{{ order.importo | number: '1.2-2' }}</td>
+              <td class="px-4 py-3 text-slate-700">{{ order.trimestre }}</td>
+              <td class="px-4 py-3 text-slate-700">{{ order.anno }}</td>
+              <td class="px-4 py-3">
+                <button mat-stroked-button type="button" (click)="openOrderDetails(order.orderId)">
+                  Dettagli
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 flex justify-center">
+      <mat-paginator
+        [length]="response().pagination.totalOrders"
+        [pageIndex]="response().pagination.currentPage - 1"
+        [pageSize]="response().pagination.pageSize"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        [showFirstLastButtons]="true"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+    </div>
+  }
+</section>

@@ -1,13 +1,19 @@
 import { Component, computed, inject } from '@angular/core';
-import { CartService } from '../../core/services/cart.service';
-import { MATERIAL_IMPORTS } from '../../shared/material';
 import { CurrencyPipe } from '@angular/common';
-import { CartItem } from '../../shared/models/cart';
 import { RouterLink } from '@angular/router';
+import { CartService } from '../../core/services/cart.service';
+import { CartItem } from '../../shared/models/cart';
+import { OrderSummaryComponent } from '../../shared/components/order-summary/order-summary.component';
+import { MATERIAL_IMPORTS } from '../../shared/material';
 
 @Component({
   selector: 'app-cart',
-  imports: [MATERIAL_IMPORTS, CurrencyPipe, RouterLink],
+  imports: [
+    MATERIAL_IMPORTS,
+    CurrencyPipe,
+    RouterLink,
+    OrderSummaryComponent,
+  ],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss',
 })

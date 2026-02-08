@@ -10,6 +10,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatFormField, MatLabel, MatError, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioGroup } from '@angular/material/radio';
 
 // prettier-ignore
 const MATERIAL_IMPORTS = [
@@ -30,12 +33,15 @@ const MATERIAL_IMPORTS = [
     MatLabel,
     MatError,
     MatSuffix,
-    MatCardTitle
+    MatCardTitle,
+    MatStepperModule,
+    MatCheckboxModule,
+    MatRadioGroup
 ];
 const SNACKBAR_PANEL_CLASSES = {
-    error: 'snackbar-error',
-    warning: 'snackbar-warning',
-    info: 'snackbar-info',
+  error: 'snackbar-error',
+  warning: 'snackbar-warning',
+  info: 'snackbar-info',
 } as const;
 
 export { MATERIAL_IMPORTS, SNACKBAR_PANEL_CLASSES };

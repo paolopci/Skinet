@@ -9,6 +9,10 @@ public class StoreContext(DbContextOptions<StoreContext> options) : IdentityDbCo
 {
     public DbSet<Product> Products { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<DeliveryMethod> DeliveryMethods { get; set; }
+    public DbSet<PaymentOrder> PaymentOrders { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderDetail> OrderDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,11 +21,19 @@ public class StoreContext(DbContextOptions<StoreContext> options) : IdentityDbCo
         modelBuilder.Entity<AppUser>().OwnsOne(user => user.Address, address =>
         {
             address.WithOwner();
-            address.Property(a => a.Street).HasMaxLength(200);
+            address.Property(a => a.FirstName).HasMaxLength(100);
+            address.Property(a => a.LastName).HasMaxLength(100);
+            address.Property(a => a.AddressLine1).HasMaxLength(200);
+            address.Property(a => a.AddressLine2).HasMaxLength(200);
             address.Property(a => a.City).HasMaxLength(100);
-            address.Property(a => a.State).HasMaxLength(100);
             address.Property(a => a.PostalCode).HasMaxLength(20);
+            address.Property(a => a.CountryCode).HasMaxLength(2);
+            address.Property(a => a.Region).HasMaxLength(100);
         });
+
+        modelBuilder.Entity<AppUser>()
+            .Property(user => user.StripeCustomerId)
+            .HasMaxLength(128);
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {

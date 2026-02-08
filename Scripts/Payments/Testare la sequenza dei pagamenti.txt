@@ -1,0 +1,16 @@
+
+
+ecco la sequenza  Skinet-Payments.postman_collection.jsn completa da salvare in file testo 📝
+
+Setup > Account - Login
+Setup > Cart - Update Cart (small price)
+Setup > Payments - Get Delivery Methods
+Setup > Cart - Update Cart with DeliveryMethod
+Payments - Happy Path > Create or Update Payment Intent
+Payments - Happy Path > Create or Update Payment Intent Again
+Payments - Negative Path > Create Payment Intent Without Token
+Payments - Negative Path > Create Payment Intent Invalid CartId
+Payments - Negative Path > Cart - Update Cart Invalid DeliveryMethod
+Payments - Negative Path > Create Payment Intent With Invalid DeliveryMethod
+Cleanup > Cart - Delete
+Nota rapida 🔐: il login (step 1) popola authToken; rifallo solo se il token è scaduto o mancante.

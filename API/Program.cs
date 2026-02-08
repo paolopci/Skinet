@@ -1,5 +1,7 @@
 using API.Errors;
 using API.Extensions;
+using Core.Interfaces;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,10 @@ builder.Services.AddControllers()
             return new BadRequestObjectResult(response);
         };
     });
+
+// Stripe
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 
 var app = builder.Build();
 

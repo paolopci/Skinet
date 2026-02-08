@@ -39,6 +39,8 @@ testem.log
 /typings
 __screenshots__/
 /ssl/
+.env
+/src/assets/env.js
 
 # System files
 .DS_Store

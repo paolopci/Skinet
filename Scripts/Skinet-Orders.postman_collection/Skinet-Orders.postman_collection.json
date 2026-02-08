@@ -1,0 +1,550 @@
+{
+  "info": {
+    "name": "Skinet - Orders CRUD",
+    "_postman_id": "17cb58b1-91f7-44d8-9276-29eaf77fd8bf",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test OrdersController (CRUD + sorting/filtering + error handling). Eseguire in ordine numerico."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Recupera token admin e utente standard per test permessi.",
+      "item": [
+        {
+          "name": "Auth - 1 Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Token admin presente\", function () {",
+                  "  pm.expect(json.token).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.environment.set(\"adminAuthToken\", json.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Auth - 2 Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Token utente presente\", function () {",
+                  "  pm.expect(json.token).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.environment.set(\"userAuthToken\", json.token);",
+                  "if (json.id) { pm.environment.set(\"userId\", json.id); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Test end-to-end CRUD + casi errore.",
+      "item": [
+        {
+          "name": "Orders - 1 Get Orders (Admin, sorted + filtered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAuthToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?sortBy={{sortBy}}&order={{sortOrder}}&filterByUserId={{filterByUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "{{sortBy}}"
+                },
+                {
+                  "key": "order",
+                  "value": "{{sortOrder}}"
+                },
+                {
+                  "key": "filterByUserId",
+                  "value": "{{filterByUserId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Payload lista ordini\", function () {",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 2 Get Orders (User, own only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?sortBy=DataOrdine&order=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "DataOrdine"
+                },
+                {
+                  "key": "order",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Payload lista ordini utente\", function () {",
+                  "  pm.expect(json).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 3 Create Order (User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoPagamento\": \"carta\",\n  \"numeroCarta\": \"4242\",\n  \"totaleOrdine\": 99.99,\n  \"statoOrdine\": \"completato\",\n  \"dettagli\": [\n    {\n      \"prodottoId\": 17,\n      \"quantita\": 2,\n      \"prezzoUnitario\": 49.995\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"OrderId valorizzato\", function () {",
+                  "  pm.expect(json.orderId).to.be.a(\"number\");",
+                  "});",
+                  "pm.environment.set(\"orderId\", String(json.orderId));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 4 Get Order By Id (User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Dettagli ordine presenti\", function () {",
+                  "  pm.expect(json.dettagli).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 5 Update Order (User)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoPagamento\": \"paypal\",\n  \"totaleOrdine\": 89.90,\n  \"statoOrdine\": \"completato\",\n  \"dettagli\": [\n    {\n      \"prodottoId\": 18,\n      \"quantita\": 1,\n      \"prezzoUnitario\": 89.90\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Order aggiornato\", function () {",
+                  "  pm.expect(json.orderId).to.eql(Number(pm.environment.get(\"orderId\")));",
+                  "  pm.expect(json.tipoPagamento).to.eql(\"paypal\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 6 Bad Request (Invalid payload)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoPagamento\": \"carta\",\n  \"numeroCarta\": \"123\",\n  \"totaleOrdine\": -10,\n  \"statoOrdine\": \"completato\",\n  \"dettagli\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Errore valido\", function () {",
+                  "  pm.expect(json.error).to.eql(\"Invalid order data\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 7 Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{missingOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{missingOrderId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Errore not found\", function () {",
+                  "  pm.expect(json.error).to.eql(\"Order not found\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders - 8 Delete Order (User)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userAuthToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:5001"
+    },
+    {
+      "key": "adminEmail",
+      "value": "paolopci@yahoo.it"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Micene@65"
+    },
+    {
+      "key": "userEmail",
+      "value": "gigi@yahoo.it"
+    },
+    {
+      "key": "userPassword",
+      "value": "Micene@65"
+    },
+    {
+      "key": "adminAuthToken",
+      "value": ""
+    },
+    {
+      "key": "userAuthToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "missingOrderId",
+      "value": "999999"
+    },
+    {
+      "key": "sortBy",
+      "value": "DataOrdine"
+    },
+    {
+      "key": "sortOrder",
+      "value": "desc"
+    },
+    {
+      "key": "filterByUserId",
+      "value": ""
+    }
+  ]
+}

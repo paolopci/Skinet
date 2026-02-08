@@ -2,6 +2,7 @@ using System.Text;
 using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Settings;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,23 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<StripeSettings>()
+            .Bind(configuration.GetSection(StripeSettings.SectionName))
+            .Validate(
+                settings => !string.IsNullOrWhiteSpace(settings.SecretKey),
+                $"{StripeSettings.SectionName}:SecretKey non configurata")
+            .Validate(
+                settings => settings.SecretKey.StartsWith("sk_test_") || settings.SecretKey.StartsWith("sk_live_"),
+                $"{StripeSettings.SectionName}:SecretKey deve iniziare con sk_test_ oppure sk_live_")
+            .Validate(
+                settings => string.IsNullOrWhiteSpace(settings.WebhookSecret)
+                            || settings.WebhookSecret.StartsWith("whsec_"),
+                $"{StripeSettings.SectionName}:WebhookSecret deve iniziare con whsec_")
+            .Validate(
+                settings => !string.IsNullOrWhiteSpace(settings.Currency),
+                $"{StripeSettings.SectionName}:Currency non configurata")
+            .ValidateOnStart();
+
         services.AddDbContext<StoreContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
@@ -57,6 +75,7 @@ public static class ServiceCollectionExtensions
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<StoreContext>();
 
         var jwtSection = configuration.GetSection("Jwt");

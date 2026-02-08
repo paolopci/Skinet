@@ -68,6 +68,16 @@ const getErrorMessage = (error: HttpErrorResponse): string | null => {
   }
 
   if (payload && typeof payload === 'object') {
+    const message = (payload as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message;
+    }
+
+    const details = (payload as { details?: unknown }).details;
+    if (typeof details === 'string' && details.trim().length > 0) {
+      return details;
+    }
+
     const title = (payload as { title?: unknown }).title;
     if (typeof title === 'string' && title.trim().length > 0) {
       return title;

@@ -27,11 +27,14 @@ export class AppComponent {
   readonly isShopRoute = computed(() => this.currentUrl().startsWith('/shop'));
 
   constructor() {
-    this.cartService.loadCart();
     this.authService.loadFromStorage();
     this.authService.currentUser().subscribe({
+      next: () => {
+        this.cartService.loadCart();
+      },
       error: () => {
         // Se il token non è valido, lo stato viene ripulito dall'interceptor.
+        this.cartService.loadCart();
       },
     });
     this.router.events

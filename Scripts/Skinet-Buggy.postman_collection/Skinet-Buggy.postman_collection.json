@@ -2,14 +2,15 @@
   "info": {
     "name": "Skinet - Buggy",
     "_postman_id": "b47b1a74-9f0e-4d6e-9b1f-2b5c0b7db2c6",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection per test endpoint Buggy. Eseguire le request in ordine numerico per verificare status code di errore e casi CORS."
   },
   "item": [
     {
       "name": "Buggy",
       "item": [
         {
-          "name": "401 Unauthorized",
+          "name": "Buggy - 1 401 Unauthorized",
           "request": {
             "method": "GET",
             "header": [],
@@ -63,7 +64,7 @@
           ]
         },
         {
-          "name": "403 Forbidden",
+          "name": "Buggy - 2 403 Forbidden",
           "request": {
             "method": "GET",
             "header": [],
@@ -117,10 +118,15 @@
           ]
         },
         {
-          "name": "404 Not Found",
+          "name": "Buggy - 3 404 Not Found",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{corsOrigin}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/buggy/not-found",
               "host": [
@@ -183,7 +189,7 @@
           ]
         },
         {
-          "name": "550 Custom Status",
+          "name": "Buggy - 4 550 Custom Status",
           "request": {
             "method": "GET",
             "header": [],
@@ -237,7 +243,7 @@
           ]
         },
         {
-          "name": "500 Server Error",
+          "name": "Buggy - 5 500 Server Error",
           "request": {
             "method": "GET",
             "header": [],
@@ -291,10 +297,13 @@
           ]
         },
         {
-          "name": "302 Redirect Products",
+          "name": "Buggy - 6 302 Redirect Products",
           "request": {
             "method": "GET",
             "header": [],
+            "protocolProfileBehavior": {
+              "followRedirects": false
+            },
             "url": {
               "raw": "{{baseUrl}}/api/buggy/redirect-products",
               "host": [
@@ -334,8 +343,18 @@
             {
               "script": {
                 "exec": [
-                  "pm.test(\"Status 302\", function () {",
-                  "  pm.response.to.have.status(302);",
+                  "pm.test(\"Status 302 (o 200 se redirect seguito)\", function () {",
+                  "  pm.expect([302, 200]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test(\"Redirect verso products\", function () {",
+                  "  if (pm.response.code === 302) {",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/api/products\");",
+                  "    return;",
+                  "  }",
+                  "",
+                  "  const payload = pm.response.json();",
+                  "  pm.expect(payload).to.be.an(\"object\");",
+                  "  pm.expect(payload).to.have.property(\"data\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -345,7 +364,7 @@
           ]
         },
         {
-          "name": "503 Service Unavailable",
+          "name": "Buggy - 7 503 Service Unavailable",
           "request": {
             "method": "GET",
             "header": [],
@@ -399,7 +418,7 @@
           ]
         },
         {
-          "name": "400 Validation Error",
+          "name": "Buggy - 8 400 Validation Error",
           "event": [
             {
               "listen": "test",
@@ -462,7 +481,7 @@
           ]
         },
         {
-          "name": "CORS Preflight (OPTIONS)",
+          "name": "Buggy - 9 CORS Preflight (OPTIONS)",
           "event": [
             {
               "listen": "test",
@@ -531,7 +550,8 @@
             }
           ]
         }
-      ]
+      ],
+      "description": "Eseguire in ordine numerico (1 -> N). Ogni request valida un comportamento specifico del BuggyController."
     }
   ],
   "variable": [

@@ -2,7 +2,9 @@ using API.Middleware;
 using Core.Entities;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace API.Extensions;
@@ -28,8 +30,11 @@ public static class ApplicationBuilderExtensions
             using var scope = app.Services.CreateScope();
             var services = scope.ServiceProvider;
             var context = services.GetRequiredService<StoreContext>();
+            var configuration = services.GetRequiredService<IConfiguration>();
+            var userManager = services.GetRequiredService<UserManager<AppUser>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             await context.Database.MigrateAsync();
-            await StoreContextSeed.SeedAsync(context);
+            await StoreContextSeed.SeedAsync(context, userManager, roleManager, configuration);
         }
         catch (Exception ex)
         {
