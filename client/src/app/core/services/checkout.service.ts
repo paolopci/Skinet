@@ -104,6 +104,15 @@ export class CheckoutService {
     }
   }
 
+  resetCheckoutStateAfterPayment(cartId: string): void {
+    const userEmail = this.authState.user()?.email ?? null;
+    const storageKey = this.getShippingStorageKeyForContext(userEmail, cartId);
+
+    this.selectedDeliveryMethod.set(null);
+    localStorage.removeItem(storageKey);
+    this.syncCartDeliveryMethodId(null);
+  }
+
   private persistSelectedDeliveryMethodId(deliveryMethodId: number | null): void {
     const storageKey = this.getShippingStorageKeyForCurrentContext();
     if (deliveryMethodId === null) {
