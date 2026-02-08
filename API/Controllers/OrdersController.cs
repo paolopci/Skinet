@@ -392,6 +392,10 @@ public class OrdersController(
             {
                 DettaglioId = detail.Id,
                 ProdottoId = detail.ProductId,
+                NomeProdotto = string.IsNullOrWhiteSpace(detail.Product?.Name)
+                    ? $"Prodotto #{detail.ProductId}"
+                    : detail.Product.Name,
+                ImmagineUrl = detail.Product?.PictureUrl,
                 Quantita = detail.Quantity,
                 PrezzoUnitario = detail.UnitPrice
             }).ToList()

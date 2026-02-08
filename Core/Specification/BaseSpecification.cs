@@ -17,6 +17,7 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
     // Ordinamento discendente opzionale.
     public Expression<Func<T, object>>? OrderByDescending { get; private set; }
     public List<Expression<Func<T, object>>> Includes { get; } = [];
+    public List<string> IncludeStrings { get; } = [];
 
     public int Take { get; private set; }
 
@@ -40,6 +41,11 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
     protected void AddInclude(Expression<Func<T, object>> includeExpression)
     {
         Includes.Add(includeExpression);
+    }
+
+    protected void AddInclude(string includeString)
+    {
+        IncludeStrings.Add(includeString);
     }
 
     // Applica paginazione alla query.

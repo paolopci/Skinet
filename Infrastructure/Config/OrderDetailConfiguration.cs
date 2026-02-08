@@ -34,5 +34,10 @@ public class OrderDetailConfiguration : IEntityTypeConfiguration<OrderDetail>
             .WithMany(order => order.Details)
             .HasForeignKey(detail => detail.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(detail => detail.Product)
+            .WithMany()
+            .HasForeignKey(detail => detail.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -13,6 +13,7 @@ public interface ISpecification<T>
     // Ordinamento discendente opzionale.
     Expression<Func<T, object>>? OrderByDescending { get; }
     List<Expression<Func<T, object>>> Includes { get; }
+    List<string> IncludeStrings { get; }
 
     int Take { get; }
     int Skip { get; }

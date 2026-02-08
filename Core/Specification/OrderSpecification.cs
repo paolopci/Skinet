@@ -17,6 +17,7 @@ public class OrderSpecification : BaseSpecification<Order>
         : base(order => order.Id == orderId && (isAdmin || order.UserId == currentUserId))
     {
         AddInclude(order => order.Details);
+        AddInclude("Details.Product");
     }
 
     public static bool IsSupportedSortBy(string? sortBy)

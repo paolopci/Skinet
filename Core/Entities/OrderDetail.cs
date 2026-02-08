@@ -8,4 +8,5 @@ public class OrderDetail : BaseEntity
     public decimal UnitPrice { get; set; }
 
     public Order? Order { get; set; }
+    public Product? Product { get; set; }
 }

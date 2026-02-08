@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable, of, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { OrderListItem } from '../../shared/models/order-list-item';
+import { OrderDetailItem } from '../../shared/models/order-detail-item';
+import { OrderDetailsResponse } from '../../shared/models/order-details-response';
 import { OrdersQueryParams } from '../../shared/models/orders-query-params';
 import { OrdersResponse } from '../../shared/models/orders-response';
 
@@ -23,6 +25,12 @@ export class OrdersService {
     return this.http
       .get<unknown>(`${this.baseUrl}orders`, { params: apiParams })
       .pipe(map((response) => this.toOrdersResponse(response, params)));
+  }
+
+  getOrderDetails(orderId: string): Observable<OrderDetailsResponse> {
+    return this.http
+      .get<unknown>(`${this.baseUrl}orders/${encodeURIComponent(orderId)}`)
+      .pipe(map((response) => this.toOrderDetailsResponse(response)));
   }
 
   hasOrders(): Observable<boolean> {
@@ -78,6 +86,43 @@ export class OrdersService {
     };
   }
 
+  private toOrderDetailsResponse(rawResponse: unknown): OrderDetailsResponse {
+    const source = this.extractObject(rawResponse);
+    if (!source) {
+      throw new Error('Formato risposta dettaglio ordine non valido.');
+    }
+
+    const orderId = this.getStringValue(source, ['orderId', 'OrderId']) ?? '';
+    const userId = this.getStringValue(source, ['userId', 'UserId']) ?? '';
+    const dataRaw = this.getStringValue(source, ['data', 'Data', 'dataOrdine', 'DataOrdine']);
+    const tipoPagamento =
+      this.getStringValue(source, ['tipoPagamento', 'TipoPagamento']) ?? 'sconosciuto';
+    const numeroCarta =
+      this.getStringValue(source, ['numeroCarta', 'NumeroCarta']) ?? null;
+    const importo = this.getNumberValue(source, ['importo', 'Importo', 'totaleOrdine', 'TotaleOrdine']) ?? 0;
+    const stato = this.getStringValue(source, ['stato', 'Stato', 'statoOrdine', 'StatoOrdine']) ?? '';
+    const dettagliRaw = this.extractRawItemsFromKeys(source, ['dettagli', 'Dettagli']);
+    const dettagli = dettagliRaw
+      .map((item) => this.mapOrderDetailItem(item))
+      .filter((item): item is OrderDetailItem => !!item);
+
+    if (!orderId) {
+      throw new Error('OrderId mancante nella risposta dettaglio ordine.');
+    }
+
+    const normalizedDate = this.normalizeDateToIso(dataRaw);
+    return {
+      orderId,
+      userId,
+      data: normalizedDate ?? dataRaw ?? '',
+      tipoPagamento,
+      numeroCarta,
+      importo,
+      stato,
+      dettagli,
+    };
+  }
+
   private applyClientFilters(orders: OrderListItem[], params: OrdersQueryParams): OrderListItem[] {
     const normalizedSearch = this.normalizeSearch(params.search);
     const normalizedSearchDate = this.normalizeSearchDate(params.search);
@@ -116,6 +161,28 @@ export class OrdersService {
     return Array.isArray(candidate) ? (candidate as Record<string, unknown>[]) : [];
   }
 
+  private extractRawItemsFromKeys(
+    source: Record<string, unknown>,
+    keys: string[],
+  ): Record<string, unknown>[] {
+    for (const key of keys) {
+      const value = source[key];
+      if (Array.isArray(value)) {
+        return value as Record<string, unknown>[];
+      }
+    }
+
+    return [];
+  }
+
+  private extractObject(rawResponse: unknown): Record<string, unknown> | null {
+    if (!rawResponse || typeof rawResponse !== 'object' || Array.isArray(rawResponse)) {
+      return null;
+    }
+
+    return rawResponse as Record<string, unknown>;
+  }
+
   private mapOrderItem(rawItem: Record<string, unknown>): OrderListItem | null {
     const orderIdRaw = this.getStringValue(rawItem, ['orderId', 'OrderId']);
     const dataRaw = this.getStringValue(rawItem, ['data', 'Data', 'dataOrdine', 'DataOrdine']);
@@ -142,6 +209,31 @@ export class OrdersService {
       importo: importoRaw ?? 0,
       trimestre: Math.floor((month - 1) / 3) + 1,
       anno: parsedDate.getUTCFullYear(),
+    };
+  }
+
+  private mapOrderDetailItem(rawItem: Record<string, unknown>): OrderDetailItem | null {
+    const prodottoId = this.getNumberValue(rawItem, ['prodottoId', 'ProdottoId']);
+    const nomeProdotto =
+      this.getStringValue(rawItem, ['nomeProdotto', 'NomeProdotto']) ??
+      (prodottoId !== null ? `Prodotto #${prodottoId}` : 'Prodotto');
+    const immagineUrl = this.getStringValue(rawItem, ['immagineUrl', 'ImmagineUrl']);
+    const quantita = this.getNumberValue(rawItem, ['quantita', 'Quantita']) ?? 0;
+    const prezzoUnitario = this.getNumberValue(rawItem, ['prezzoUnitario', 'PrezzoUnitario']) ?? 0;
+    const dettaglioId = this.getNumberValue(rawItem, ['dettaglioId', 'DettaglioId']);
+
+    if (prodottoId === null) {
+      return null;
+    }
+
+    return {
+      dettaglioId: dettaglioId ?? undefined,
+      prodottoId,
+      nomeProdotto,
+      immagineUrl: immagineUrl ?? null,
+      quantita,
+      prezzoUnitario,
+      totaleRiga: quantita * prezzoUnitario,
     };
   }
 

@@ -82,6 +82,7 @@
             <th class="px-4 py-3">Importo</th>
             <th class="px-4 py-3">Trimestre</th>
             <th class="px-4 py-3">Anno</th>
+            <th class="px-4 py-3">Azioni</th>
           </tr>
         </thead>
         <tbody>
@@ -93,6 +94,11 @@
               <td class="px-4 py-3 text-slate-700">{{ order.importo | number: '1.2-2' }}</td>
               <td class="px-4 py-3 text-slate-700">{{ order.trimestre }}</td>
               <td class="px-4 py-3 text-slate-700">{{ order.anno }}</td>
+              <td class="px-4 py-3">
+                <button mat-stroked-button type="button" (click)="openOrderDetails(order.orderId)">
+                  Dettagli
+                </button>
+              </td>
             </tr>
           }
         </tbody>

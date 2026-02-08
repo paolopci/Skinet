@@ -3,12 +3,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { MATERIAL_IMPORTS } from '../../../shared/material';
 import { OrdersService } from '../../../core/services/orders.service';
 import { OrdersQueryParams } from '../../../shared/models/orders-query-params';
 import { OrdersResponse } from '../../../shared/models/orders-response';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import {
+  OrderDetailsDialogComponent,
+  OrderDetailsDialogData,
+} from './order-details-dialog/order-details-dialog.component';
 
 @Component({
   selector: 'app-orders',
@@ -19,6 +24,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 })
 export class OrdersComponent {
   private readonly ordersService = inject(OrdersService);
+  private readonly dialogService = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
   private readonly searchInput$ = new Subject<string>();
 
@@ -110,6 +116,20 @@ export class OrdersComponent {
       pageSize: event.pageSize,
     }));
     this.loadOrders();
+  }
+
+  openOrderDetails(orderId: string): void {
+    this.dialogService.open<OrderDetailsDialogComponent, OrderDetailsDialogData>(
+      OrderDetailsDialogComponent,
+      {
+        minWidth: 'min(900px, 95vw)',
+        maxWidth: '95vw',
+        maxHeight: '90vh',
+        data: {
+          orderId,
+        },
+      },
+    );
   }
 
   private loadOrders(): void {
