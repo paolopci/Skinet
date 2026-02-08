@@ -482,8 +482,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.checkoutService.resetCheckoutStateAfterPayment(cart.id);
-      this.cartService.clearClientCartState();
+      try {
+        this.checkoutService.resetCheckoutStateAfterPayment(cart.id);
+        this.cartService.clearClientCartState();
+      } catch {
+        this.snackbar.showWarning(
+          'Pagamento confermato, ma il reset locale del carrello non è completo. Ricarica la pagina.',
+        );
+      }
+
       this.isOrderConfirmed = true;
       this.confirmedOrderId = finalizeResult.orderId ?? null;
       this.confirmationMessage = finalizeResult.message ?? null;
