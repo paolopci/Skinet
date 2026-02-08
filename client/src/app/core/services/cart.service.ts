@@ -67,8 +67,8 @@ export class CartService {
   }
 
   clearClientCartState() {
-    this.cart.set(null);
-    localStorage.removeItem(this.guestCartIdKey);
+    this.updateCartState(null);
+    // Compatibilità con vecchie chiavi locali
     localStorage.removeItem(this.legacyCartIdKey);
   }
 
