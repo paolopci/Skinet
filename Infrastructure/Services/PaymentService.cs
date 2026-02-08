@@ -1,7 +1,9 @@
 using Core.Entities;
 using Core.Interfaces;
 using Core.Payments;
+using Infrastructure.Data;
 using Infrastructure.Settings;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,7 +18,8 @@ namespace Infrastructure.Services;
 public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                             ICartService cartService,
                             IGenericRepository<Core.Entities.Product> productRepo,
-                            IGenericRepository<DeliveryMethod> dmRepo) : IPaymentService
+                            IGenericRepository<DeliveryMethod> dmRepo,
+                            StoreContext dbContext) : IPaymentService
 {
     /// <summary>
     /// Crea un nuovo Payment Intent o aggiorna quello esistente associato al carrello.
@@ -147,6 +150,154 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         return PaymentIntentOperationResult.Success(cart);
     }
 
+    public async Task<FinalizePaymentResult> FinalizePaymentAsync(string cartId, string? userId, string? paymentIntentId)
+    {
+        if (string.IsNullOrWhiteSpace(cartId))
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.InvalidCartId,
+                "invalid_cart_id",
+                "Identificativo carrello non valido.");
+        }
+
+        var cart = await cartService.GetCartAsync(cartId);
+        if (cart == null)
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.CartNotFound,
+                "cart_not_found",
+                $"Carrello '{cartId}' non trovato.");
+        }
+
+        if (string.IsNullOrWhiteSpace(cart.PaymentIntentId))
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.PaymentIntentMissing,
+                "missing_payment_intent",
+                "Il carrello non ha un PaymentIntent associato.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(paymentIntentId) &&
+            !string.Equals(paymentIntentId, cart.PaymentIntentId, StringComparison.Ordinal))
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.PaymentIntentMismatch,
+                "payment_intent_mismatch",
+                "Il PaymentIntent specificato non corrisponde al carrello.");
+        }
+
+        var stripeSettings = stripeSettingsOptions.Value;
+        StripeConfiguration.ApiKey = stripeSettings.SecretKey;
+
+        PaymentIntent intent;
+        try
+        {
+            var paymentIntentService = new PaymentIntentService();
+            intent = await paymentIntentService.GetAsync(cart.PaymentIntentId);
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.PaymentProviderError,
+                "stripe_error",
+                $"Errore Stripe durante verifica pagamento: {message}");
+        }
+
+        if (!IsPaymentIntentOwnedByUser(intent, userId))
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.Forbidden,
+                "forbidden",
+                "Il PaymentIntent non appartiene all'utente autenticato.");
+        }
+
+        var paymentStatus = intent.Status?.ToLowerInvariant() ?? "unknown";
+        if (paymentStatus != "succeeded")
+        {
+            if (paymentStatus == "requires_payment_method")
+            {
+                await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                return FinalizePaymentResult.Failure(
+                    FinalizePaymentError.PaymentFailed,
+                    paymentStatus,
+                    "Pagamento non riuscito. Verifica i dati carta e riprova.");
+            }
+
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.PaymentNotCompleted,
+                paymentStatus,
+                $"Pagamento non ancora completato. Stato Stripe corrente: {paymentStatus}.");
+        }
+
+        var order = await UpsertOrderAsync(intent, PaymentOrderStatus.Paid, null);
+
+        var metadataCartId = GetMetadataValue(intent.Metadata, "cartId");
+        if (!string.IsNullOrWhiteSpace(metadataCartId))
+        {
+            await cartService.DeleteCartAsync(metadataCartId);
+        }
+
+        return FinalizePaymentResult.Success(order.Id, intent.Id);
+    }
+
+    public async Task<WebhookProcessResult> ProcessWebhookAsync(string payload, string? stripeSignatureHeader)
+    {
+        if (string.IsNullOrWhiteSpace(stripeSignatureHeader))
+        {
+            return WebhookProcessResult.Failure(
+                WebhookProcessError.MissingSignature,
+                "Header Stripe-Signature mancante.");
+        }
+
+        var stripeSettings = stripeSettingsOptions.Value;
+        if (string.IsNullOrWhiteSpace(stripeSettings.WebhookSecret))
+        {
+            return WebhookProcessResult.Failure(
+                WebhookProcessError.MissingWebhookSecret,
+                "WebhookSecret Stripe non configurato.");
+        }
+
+        Event stripeEvent;
+        try
+        {
+            stripeEvent = EventUtility.ConstructEvent(payload, stripeSignatureHeader, stripeSettings.WebhookSecret);
+        }
+        catch (StripeException ex)
+        {
+            return WebhookProcessResult.Failure(
+                WebhookProcessError.InvalidSignature,
+                $"Firma webhook non valida: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            return WebhookProcessResult.Failure(
+                WebhookProcessError.InvalidPayload,
+                $"Payload webhook non valido: {ex.Message}");
+        }
+
+        if (stripeEvent.Data.Object is not PaymentIntent intent)
+        {
+            return WebhookProcessResult.Success("Evento ignorato: payload non contiene PaymentIntent.");
+        }
+
+        var eventType = stripeEvent.Type?.ToLowerInvariant() ?? string.Empty;
+        switch (eventType)
+        {
+            case "payment_intent.succeeded":
+                await UpsertOrderAsync(intent, PaymentOrderStatus.Paid, null);
+                await DeleteCartFromMetadataAsync(intent);
+                return WebhookProcessResult.Success("PaymentIntent succeeded processato.");
+
+            case "payment_intent.payment_failed":
+                await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                return WebhookProcessResult.Success("PaymentIntent failed processato.");
+
+            default:
+                return WebhookProcessResult.Success($"Evento ignorato: {stripeEvent.Type}");
+        }
+    }
+
     private static long CalculateCartAmountInMinorUnits(ShoppingCart cart, decimal shippingPrice)
     {
         checked
@@ -201,5 +352,99 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         }
 
         return value.Trim().Replace(" ", "-", StringComparison.Ordinal);
+    }
+
+    private static bool IsPaymentIntentOwnedByUser(PaymentIntent intent, string? userId)
+    {
+        var metadataUserId = GetMetadataValue(intent.Metadata, "userId");
+        if (string.IsNullOrWhiteSpace(metadataUserId))
+        {
+            return true;
+        }
+
+        if (string.Equals(metadataUserId, "anonymous", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(userId) &&
+               string.Equals(metadataUserId, userId, StringComparison.Ordinal);
+    }
+
+    private async Task DeleteCartFromMetadataAsync(PaymentIntent intent)
+    {
+        var cartId = GetMetadataValue(intent.Metadata, "cartId");
+        if (string.IsNullOrWhiteSpace(cartId))
+        {
+            return;
+        }
+
+        await cartService.DeleteCartAsync(cartId);
+    }
+
+    private async Task<PaymentOrder> UpsertOrderAsync(
+        PaymentIntent intent,
+        PaymentOrderStatus incomingStatus,
+        string? failureMessage)
+    {
+        var paymentIntentId = intent.Id ?? string.Empty;
+        var cartId = GetMetadataValue(intent.Metadata, "cartId") ?? string.Empty;
+        var userId = GetMetadataValue(intent.Metadata, "userId");
+        var now = DateTime.UtcNow;
+
+        var order = await dbContext.PaymentOrders
+            .FirstOrDefaultAsync(order => order.PaymentIntentId == paymentIntentId);
+
+        var finalStatus = ResolveStatus(order?.Status, incomingStatus);
+        if (order == null)
+        {
+            order = new PaymentOrder
+            {
+                CartId = cartId,
+                PaymentIntentId = paymentIntentId,
+                UserId = userId,
+                Amount = intent.Amount,
+                Currency = intent.Currency ?? "usd",
+                Status = finalStatus,
+                FailureMessage = finalStatus == PaymentOrderStatus.Failed ? failureMessage : null,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
+            };
+
+            dbContext.PaymentOrders.Add(order);
+        }
+        else
+        {
+            order.CartId = string.IsNullOrWhiteSpace(order.CartId) ? cartId : order.CartId;
+            order.UserId = string.IsNullOrWhiteSpace(order.UserId) ? userId : order.UserId;
+            order.Amount = intent.Amount;
+            order.Currency = intent.Currency ?? order.Currency;
+            order.Status = finalStatus;
+            order.FailureMessage = finalStatus == PaymentOrderStatus.Failed ? failureMessage : null;
+            order.UpdatedAtUtc = now;
+        }
+
+        await dbContext.SaveChangesAsync();
+        return order;
+    }
+
+    private static PaymentOrderStatus ResolveStatus(PaymentOrderStatus? existingStatus, PaymentOrderStatus incomingStatus)
+    {
+        if (existingStatus == PaymentOrderStatus.Paid)
+        {
+            return PaymentOrderStatus.Paid;
+        }
+
+        return incomingStatus;
+    }
+
+    private static string? GetMetadataValue(IDictionary<string, string>? metadata, string key)
+    {
+        if (metadata == null)
+        {
+            return null;
+        }
+
+        return metadata.TryGetValue(key, out var value) ? value : null;
     }
 }
