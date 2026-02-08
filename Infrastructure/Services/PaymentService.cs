@@ -3,6 +3,7 @@ using Core.Interfaces;
 using Core.Payments;
 using Infrastructure.Data;
 using Infrastructure.Settings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,6 +22,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                             IGenericRepository<Core.Entities.Product> productRepo,
                             IGenericRepository<DeliveryMethod> dmRepo,
                             StoreContext dbContext,
+                            UserManager<AppUser> userManager,
                             ILogger<PaymentService> logger) : IPaymentService
 {
     /// <summary>
@@ -32,7 +34,11 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
     /// <returns>
     /// Esito dell'operazione con carrello aggiornato oppure errore semantico.
     /// </returns>
-    public async Task<PaymentIntentOperationResult> CreateUpdatePaymentIntent(string cartId, string? userId)
+    public async Task<PaymentIntentOperationResult> CreateUpdatePaymentIntent(
+        string cartId,
+        string? userId,
+        bool savePaymentMethod,
+        string? paymentMethodId)
     {
         using var scope = BeginCorrelationScope(cartId, null, userId);
         logger.LogInformation("Avvio create/update PaymentIntent");
@@ -111,8 +117,41 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         var cartHash = ComputeCartHash(cart, shippingPrice, stripeSettings.Currency);
         var metadata = BuildMetadata(cart, userId, cartHash);
         var totalAmountInMinorUnits = CalculateCartAmountInMinorUnits(cart, shippingPrice);
+        var normalizedPaymentMethodId = string.IsNullOrWhiteSpace(paymentMethodId) ? null : paymentMethodId.Trim();
 
         var service = new PaymentIntentService();
+        string? stripeCustomerId = null;
+        var requiresCustomerContext = savePaymentMethod || normalizedPaymentMethodId is not null;
+        if (requiresCustomerContext && !string.IsNullOrWhiteSpace(userId))
+        {
+            var customerResult = await GetStripeCustomerForExistingUserAsync(userId, createIfMissing: true);
+            if (!customerResult.IsSuccess)
+            {
+                var customerError = customerResult.Error == SavedPaymentMethodOperationError.PaymentProviderError
+                    ? PaymentIntentOperationError.PaymentProviderError
+                    : PaymentIntentOperationError.Forbidden;
+                return PaymentIntentOperationResult.Failure(customerError, customerResult.Message!);
+            }
+
+            stripeCustomerId = customerResult.CustomerId;
+        }
+
+        if (normalizedPaymentMethodId is not null && stripeCustomerId is null)
+        {
+            return PaymentIntentOperationResult.Failure(
+                PaymentIntentOperationError.Forbidden,
+                "Metodo di pagamento salvato non consentito per utente non autenticato.");
+        }
+
+        if (normalizedPaymentMethodId is not null)
+        {
+            var isOwnedByUser = await IsPaymentMethodOwnedByCustomerAsync(normalizedPaymentMethodId, stripeCustomerId!);
+            if (!isOwnedByUser.IsSuccess)
+            {
+                return PaymentIntentOperationResult.Failure(isOwnedByUser.Error, isOwnedByUser.Message!);
+            }
+        }
+
         PaymentIntent? intent = null;
 
         try
@@ -126,6 +165,20 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                     PaymentMethodTypes = ["card"],
                     Metadata = metadata
                 };
+                if (!string.IsNullOrWhiteSpace(stripeCustomerId))
+                {
+                    options.Customer = stripeCustomerId;
+                }
+
+                if (savePaymentMethod)
+                {
+                    options.SetupFutureUsage = "off_session";
+                }
+
+                if (normalizedPaymentMethodId is not null)
+                {
+                    options.PaymentMethod = normalizedPaymentMethodId;
+                }
 
                 intent = await service.CreateAsync(options, new RequestOptions
                 {
@@ -142,6 +195,21 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                     Amount = totalAmountInMinorUnits,
                     Metadata = metadata
                 };
+                if (!string.IsNullOrWhiteSpace(stripeCustomerId))
+                {
+                    options.Customer = stripeCustomerId;
+                }
+
+                if (savePaymentMethod)
+                {
+                    options.SetupFutureUsage = "off_session";
+                }
+
+                if (normalizedPaymentMethodId is not null)
+                {
+                    options.PaymentMethod = normalizedPaymentMethodId;
+                }
+
                 intent = await service.UpdateAsync(cart.PaymentIntentId, options, new RequestOptions
                 {
                     IdempotencyKey = $"pi:update:{SanitizeForIdempotency(cart.PaymentIntentId)}:{cartHash}"
@@ -351,6 +419,364 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                 logger.LogInformation("Webhook Stripe ignorato: evento {StripeEventType} non gestito", stripeEvent.Type);
                 return WebhookProcessResult.Success($"Evento ignorato: {stripeEvent.Type}");
         }
+    }
+
+    public async Task<SavedPaymentMethodsResult> GetSavedPaymentMethodsAsync(string? userId)
+    {
+        var customerResult = await GetStripeCustomerForExistingUserAsync(userId, createIfMissing: false);
+        if (!customerResult.IsSuccess)
+        {
+            return SavedPaymentMethodsResult.Failure(customerResult.Error, customerResult.Message!);
+        }
+
+        if (string.IsNullOrWhiteSpace(customerResult.CustomerId))
+        {
+            return SavedPaymentMethodsResult.Success([]);
+        }
+
+        StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+        try
+        {
+            var customerService = new CustomerService();
+            var customer = await customerService.GetAsync(customerResult.CustomerId);
+
+            var paymentMethodService = new PaymentMethodService();
+            var paymentMethods = await paymentMethodService.ListAsync(new PaymentMethodListOptions
+            {
+                Customer = customerResult.CustomerId,
+                Type = "card"
+            });
+
+            var defaultPaymentMethodId = customer.InvoiceSettings?.DefaultPaymentMethodId;
+            var mapped = paymentMethods.Data
+                .Select(method => new SavedPaymentMethodDto(
+                    method.Id,
+                    method.Card?.Brand ?? "unknown",
+                    method.Card?.Last4 ?? string.Empty,
+                    method.Card?.ExpMonth ?? 0,
+                    method.Card?.ExpYear ?? 0,
+                    string.Equals(defaultPaymentMethodId, method.Id, StringComparison.Ordinal)))
+                .ToList();
+
+            return SavedPaymentMethodsResult.Success(mapped);
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante lettura payment methods: {StripeMessage}", message);
+            return SavedPaymentMethodsResult.Failure(
+                SavedPaymentMethodOperationError.PaymentProviderError,
+                $"Errore Stripe durante lettura payment methods: {message}");
+        }
+    }
+
+    public async Task<SavedPaymentMethodOperationResult> DeleteSavedPaymentMethodAsync(
+        string? userId,
+        string paymentMethodId)
+    {
+        var normalizedPaymentMethodId = paymentMethodId?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedPaymentMethodId))
+        {
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.InvalidPaymentMethodId,
+                "PaymentMethodId non valido.");
+        }
+
+        var customerResult = await GetStripeCustomerForExistingUserAsync(userId, createIfMissing: false);
+        if (!customerResult.IsSuccess)
+        {
+            return SavedPaymentMethodOperationResult.Failure(customerResult.Error, customerResult.Message!);
+        }
+
+        if (string.IsNullOrWhiteSpace(customerResult.CustomerId))
+        {
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentMethodNotFound,
+                "Nessun metodo di pagamento salvato trovato per l'utente.");
+        }
+
+        StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+        try
+        {
+            var paymentMethodOwnership = await IsSavedPaymentMethodOwnedByCustomerAsync(
+                normalizedPaymentMethodId,
+                customerResult.CustomerId);
+            if (!paymentMethodOwnership.IsSuccess)
+            {
+                return paymentMethodOwnership;
+            }
+
+            var customerService = new CustomerService();
+            var customer = await customerService.GetAsync(customerResult.CustomerId);
+            if (string.Equals(
+                    customer.InvoiceSettings?.DefaultPaymentMethodId,
+                    normalizedPaymentMethodId,
+                    StringComparison.Ordinal))
+            {
+                await customerService.UpdateAsync(customerResult.CustomerId, new CustomerUpdateOptions
+                {
+                    InvoiceSettings = new CustomerInvoiceSettingsOptions
+                    {
+                        DefaultPaymentMethod = string.Empty
+                    }
+                });
+            }
+
+            var paymentMethodService = new PaymentMethodService();
+            await paymentMethodService.DetachAsync(normalizedPaymentMethodId);
+            return SavedPaymentMethodOperationResult.Success();
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante delete payment method: {StripeMessage}", message);
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentProviderError,
+                $"Errore Stripe durante eliminazione payment method: {message}");
+        }
+    }
+
+    public async Task<SavedPaymentMethodOperationResult> SetDefaultSavedPaymentMethodAsync(
+        string? userId,
+        string paymentMethodId)
+    {
+        var normalizedPaymentMethodId = paymentMethodId?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedPaymentMethodId))
+        {
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.InvalidPaymentMethodId,
+                "PaymentMethodId non valido.");
+        }
+
+        var customerResult = await GetStripeCustomerForExistingUserAsync(userId, createIfMissing: false);
+        if (!customerResult.IsSuccess)
+        {
+            return SavedPaymentMethodOperationResult.Failure(customerResult.Error, customerResult.Message!);
+        }
+
+        if (string.IsNullOrWhiteSpace(customerResult.CustomerId))
+        {
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentMethodNotFound,
+                "Nessun metodo di pagamento salvato trovato per l'utente.");
+        }
+
+        StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+        try
+        {
+            var paymentMethodOwnership = await IsSavedPaymentMethodOwnedByCustomerAsync(
+                normalizedPaymentMethodId,
+                customerResult.CustomerId);
+            if (!paymentMethodOwnership.IsSuccess)
+            {
+                return paymentMethodOwnership;
+            }
+
+            var customerService = new CustomerService();
+            await customerService.UpdateAsync(customerResult.CustomerId, new CustomerUpdateOptions
+            {
+                InvoiceSettings = new CustomerInvoiceSettingsOptions
+                {
+                    DefaultPaymentMethod = normalizedPaymentMethodId
+                }
+            });
+
+            return SavedPaymentMethodOperationResult.Success();
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante set default payment method: {StripeMessage}", message);
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentProviderError,
+                $"Errore Stripe durante impostazione default payment method: {message}");
+        }
+    }
+
+    private async Task<(bool IsSuccess, PaymentIntentOperationError Error, string? Message)>
+        IsPaymentMethodOwnedByCustomerAsync(string paymentMethodId, string customerId)
+    {
+        StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+        try
+        {
+            var paymentMethodService = new PaymentMethodService();
+            var paymentMethod = await paymentMethodService.GetAsync(paymentMethodId);
+            if (paymentMethod == null)
+            {
+                return (false, PaymentIntentOperationError.PaymentMethodNotFound, "Metodo di pagamento non trovato.");
+            }
+
+            if (!string.Equals(paymentMethod.CustomerId, customerId, StringComparison.Ordinal))
+            {
+                return (false, PaymentIntentOperationError.Forbidden, "Il metodo di pagamento non appartiene all'utente autenticato.");
+            }
+
+            return (true, PaymentIntentOperationError.None, null);
+        }
+        catch (StripeException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return (false, PaymentIntentOperationError.PaymentMethodNotFound, "Metodo di pagamento non trovato.");
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante validazione ownership payment method: {StripeMessage}", message);
+            return (false, PaymentIntentOperationError.PaymentProviderError, $"Errore Stripe durante verifica payment method: {message}");
+        }
+    }
+
+    private async Task<SavedPaymentMethodOperationResult> IsSavedPaymentMethodOwnedByCustomerAsync(
+        string paymentMethodId,
+        string customerId)
+    {
+        var paymentMethodService = new PaymentMethodService();
+        try
+        {
+            var paymentMethod = await paymentMethodService.GetAsync(paymentMethodId);
+            if (paymentMethod == null)
+            {
+                return SavedPaymentMethodOperationResult.Failure(
+                    SavedPaymentMethodOperationError.PaymentMethodNotFound,
+                    "Metodo di pagamento non trovato.");
+            }
+
+            if (!string.Equals(paymentMethod.CustomerId, customerId, StringComparison.Ordinal))
+            {
+                return SavedPaymentMethodOperationResult.Failure(
+                    SavedPaymentMethodOperationError.Forbidden,
+                    "Il metodo di pagamento non appartiene all'utente autenticato.");
+            }
+
+            return SavedPaymentMethodOperationResult.Success();
+        }
+        catch (StripeException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentMethodNotFound,
+                "Metodo di pagamento non trovato.");
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante validazione payment method salvato: {StripeMessage}", message);
+            return SavedPaymentMethodOperationResult.Failure(
+                SavedPaymentMethodOperationError.PaymentProviderError,
+                $"Errore Stripe durante verifica payment method: {message}");
+        }
+    }
+
+    private async Task<StripeCustomerResult> GetStripeCustomerForExistingUserAsync(string? userId, bool createIfMissing)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return StripeCustomerResult.Failure(
+                SavedPaymentMethodOperationError.Forbidden,
+                "Utente non autenticato.");
+        }
+
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return StripeCustomerResult.Failure(
+                SavedPaymentMethodOperationError.UserNotFound,
+                "Utente non trovato.");
+        }
+
+        var existingCustomerId = user.StripeCustomerId?.Trim();
+        if (!string.IsNullOrWhiteSpace(existingCustomerId))
+        {
+            StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+            var customerService = new CustomerService();
+            try
+            {
+                var existingCustomer = await customerService.GetAsync(existingCustomerId);
+                if (!string.IsNullOrWhiteSpace(existingCustomer.Id))
+                {
+                    return StripeCustomerResult.Success(existingCustomer.Id);
+                }
+            }
+            catch (StripeException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                logger.LogWarning(
+                    "Stripe customer non trovato per utente {UserId}. StripeCustomerId={StripeCustomerId}. Verrà rigenerato se richiesto.",
+                    user.Id,
+                    existingCustomerId);
+                user.StripeCustomerId = null;
+                await userManager.UpdateAsync(user);
+            }
+            catch (StripeException ex)
+            {
+                var message = ex.StripeError?.Message ?? ex.Message;
+                logger.LogError(ex, "Errore Stripe durante verifica customer esistente: {StripeMessage}", message);
+                return StripeCustomerResult.Failure(
+                    SavedPaymentMethodOperationError.PaymentProviderError,
+                    $"Errore Stripe durante verifica customer: {message}");
+            }
+        }
+
+        if (!createIfMissing)
+        {
+            return StripeCustomerResult.Success(null);
+        }
+
+        StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+        try
+        {
+            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+            var customerService = new CustomerService();
+            var createOptions = new CustomerCreateOptions
+            {
+                Metadata = new Dictionary<string, string>
+                {
+                    ["userId"] = user.Id
+                }
+            };
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                createOptions.Email = user.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                createOptions.Name = fullName;
+            }
+
+            var customer = await customerService.CreateAsync(createOptions);
+            user.StripeCustomerId = customer.Id;
+            var identityResult = await userManager.UpdateAsync(user);
+            if (!identityResult.Succeeded)
+            {
+                return StripeCustomerResult.Failure(
+                    SavedPaymentMethodOperationError.UserNotFound,
+                    "Impossibile salvare il customer Stripe per l'utente.");
+            }
+
+            return StripeCustomerResult.Success(customer.Id);
+        }
+        catch (StripeException ex)
+        {
+            var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante creazione customer: {StripeMessage}", message);
+            return StripeCustomerResult.Failure(
+                SavedPaymentMethodOperationError.PaymentProviderError,
+                $"Errore Stripe durante creazione customer: {message}");
+        }
+    }
+
+    private sealed record StripeCustomerResult(
+        bool IsSuccess,
+        SavedPaymentMethodOperationError Error,
+        string? CustomerId,
+        string? Message)
+    {
+        public static StripeCustomerResult Success(string? customerId) =>
+            new(true, SavedPaymentMethodOperationError.None, customerId, null);
+
+        public static StripeCustomerResult Failure(
+            SavedPaymentMethodOperationError error,
+            string message) =>
+            new(false, error, null, message);
     }
 
     private static long CalculateCartAmountInMinorUnits(ShoppingCart cart, decimal shippingPrice)

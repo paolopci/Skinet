@@ -18,18 +18,27 @@ namespace API.Controllers
     {
         [Authorize]
         [HttpPost("{cartId}")]
-        public async Task<ActionResult<ShoppingCart>> CreateOrUpdatePaymentIntent(string cartId)
+        public async Task<ActionResult<ShoppingCart>> CreateOrUpdatePaymentIntent(
+            string cartId,
+            [FromBody] CreateOrUpdatePaymentIntentRequest? request)
         {
+            request ??= new CreateOrUpdatePaymentIntentRequest();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             using var scope = logger.BeginScope(new Dictionary<string, object?>
             {
                 ["TraceId"] = HttpContext.TraceIdentifier,
                 ["CartId"] = cartId,
-                ["UserId"] = userId
+                ["UserId"] = userId,
+                ["SavePaymentMethod"] = request.SavePaymentMethod,
+                ["PaymentMethodId"] = request.PaymentMethodId
             });
 
             logger.LogInformation("Richiesta create/update PaymentIntent ricevuta");
-            var result = await paymentService.CreateUpdatePaymentIntent(cartId, userId);
+            var result = await paymentService.CreateUpdatePaymentIntent(
+                cartId,
+                userId,
+                request.SavePaymentMethod,
+                request.PaymentMethodId);
 
             if (!result.IsSuccess)
             {
@@ -49,6 +58,11 @@ namespace API.Controllers
                         new ApiErrorResponse(StatusCodes.Status400BadRequest, "Metodo di spedizione non valido", result.Message)),
                     PaymentIntentOperationError.ProductNotFound => BadRequest(
                         new ApiErrorResponse(StatusCodes.Status400BadRequest, "Prodotto non disponibile", result.Message)),
+                    PaymentIntentOperationError.PaymentMethodNotFound => NotFound(
+                        new ApiErrorResponse(StatusCodes.Status404NotFound, "PaymentMethod non trovato", result.Message)),
+                    PaymentIntentOperationError.Forbidden => StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new ApiErrorResponse(StatusCodes.Status403Forbidden, "Operazione non autorizzata", result.Message)),
                     PaymentIntentOperationError.PaymentProviderError => StatusCode(
                         StatusCodes.Status502BadGateway,
                         new ApiErrorResponse(StatusCodes.Status502BadGateway, "Errore provider pagamento", result.Message)),
@@ -60,6 +74,107 @@ namespace API.Controllers
 
             logger.LogInformation("Create/update PaymentIntent completata con successo");
             return Ok(result.Cart);
+        }
+
+        [Authorize]
+        [HttpGet("payment-methods")]
+        public async Task<ActionResult<IReadOnlyList<SavedPaymentMethodResponse>>> GetSavedPaymentMethods()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await paymentService.GetSavedPaymentMethodsAsync(userId);
+            if (!result.IsSuccess)
+            {
+                return result.Error switch
+                {
+                    SavedPaymentMethodOperationError.Forbidden => StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new ApiErrorResponse(StatusCodes.Status403Forbidden, "Operazione non autorizzata", result.Message)),
+                    SavedPaymentMethodOperationError.UserNotFound => NotFound(
+                        new ApiErrorResponse(StatusCodes.Status404NotFound, "Utente non trovato", result.Message)),
+                    SavedPaymentMethodOperationError.PaymentProviderError => StatusCode(
+                        StatusCodes.Status502BadGateway,
+                        new ApiErrorResponse(StatusCodes.Status502BadGateway, "Errore provider pagamento", result.Message)),
+                    _ => StatusCode(
+                        StatusCodes.Status500InternalServerError,
+                        new ApiErrorResponse(StatusCodes.Status500InternalServerError, "Errore interno", result.Message))
+                };
+            }
+
+            var items = result.PaymentMethods!
+                .Select(method => new SavedPaymentMethodResponse
+                {
+                    Id = method.Id,
+                    Brand = method.Brand,
+                    Last4 = method.Last4,
+                    ExpMonth = method.ExpMonth,
+                    ExpYear = method.ExpYear,
+                    IsDefault = method.IsDefault
+                })
+                .ToList();
+
+            return Ok(items);
+        }
+
+        [Authorize]
+        [HttpDelete("payment-methods/{paymentMethodId}")]
+        public async Task<IActionResult> DeleteSavedPaymentMethod(string paymentMethodId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await paymentService.DeleteSavedPaymentMethodAsync(userId, paymentMethodId);
+            if (result.IsSuccess)
+            {
+                return NoContent();
+            }
+
+            return result.Error switch
+            {
+                SavedPaymentMethodOperationError.Forbidden => StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new ApiErrorResponse(StatusCodes.Status403Forbidden, "Operazione non autorizzata", result.Message)),
+                SavedPaymentMethodOperationError.UserNotFound => NotFound(
+                    new ApiErrorResponse(StatusCodes.Status404NotFound, "Utente non trovato", result.Message)),
+                SavedPaymentMethodOperationError.InvalidPaymentMethodId => BadRequest(
+                    new ApiErrorResponse(StatusCodes.Status400BadRequest, "PaymentMethod non valido", result.Message)),
+                SavedPaymentMethodOperationError.PaymentMethodNotFound => NotFound(
+                    new ApiErrorResponse(StatusCodes.Status404NotFound, "PaymentMethod non trovato", result.Message)),
+                SavedPaymentMethodOperationError.PaymentProviderError => StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    new ApiErrorResponse(StatusCodes.Status502BadGateway, "Errore provider pagamento", result.Message)),
+                _ => StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new ApiErrorResponse(StatusCodes.Status500InternalServerError, "Errore interno", result.Message))
+            };
+        }
+
+        [Authorize]
+        [HttpPost("payment-methods/{paymentMethodId}/default")]
+        public async Task<IActionResult> SetDefaultSavedPaymentMethod(string paymentMethodId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await paymentService.SetDefaultSavedPaymentMethodAsync(userId, paymentMethodId);
+            if (result.IsSuccess)
+            {
+                return Ok(new { isSuccess = true });
+            }
+
+            return result.Error switch
+            {
+                SavedPaymentMethodOperationError.Forbidden => StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new ApiErrorResponse(StatusCodes.Status403Forbidden, "Operazione non autorizzata", result.Message)),
+                SavedPaymentMethodOperationError.UserNotFound => NotFound(
+                    new ApiErrorResponse(StatusCodes.Status404NotFound, "Utente non trovato", result.Message)),
+                SavedPaymentMethodOperationError.InvalidPaymentMethodId => BadRequest(
+                    new ApiErrorResponse(StatusCodes.Status400BadRequest, "PaymentMethod non valido", result.Message)),
+                SavedPaymentMethodOperationError.PaymentMethodNotFound => NotFound(
+                    new ApiErrorResponse(StatusCodes.Status404NotFound, "PaymentMethod non trovato", result.Message)),
+                SavedPaymentMethodOperationError.PaymentProviderError => StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    new ApiErrorResponse(StatusCodes.Status502BadGateway, "Errore provider pagamento", result.Message)),
+                _ => StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new ApiErrorResponse(StatusCodes.Status500InternalServerError, "Errore interno", result.Message))
+            };
         }
 
         [Authorize]

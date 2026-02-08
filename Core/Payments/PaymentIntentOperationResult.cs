@@ -10,7 +10,9 @@ public enum PaymentIntentOperationError
     CartEmpty = 3,
     DeliveryMethodNotFound = 4,
     ProductNotFound = 5,
-    PaymentProviderError = 6
+    PaymentProviderError = 6,
+    Forbidden = 7,
+    PaymentMethodNotFound = 8
 }
 
 public sealed record PaymentIntentOperationResult(

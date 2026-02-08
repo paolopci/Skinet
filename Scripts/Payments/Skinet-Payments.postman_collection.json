@@ -477,6 +477,152 @@
         }
       ],
       "description": "Pulizia finale del carrello di test."
+    },
+    {
+      "name": "Payments - Saved Methods",
+      "description": "Test endpoint gestione carte salvate (lista/default/delete).",
+      "item": [
+        {
+          "name": "Saved Methods - 1 Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Lista payment methods\", function () {",
+                  "  pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "if (Array.isArray(data) && data.length > 0) {",
+                  "  pm.collectionVariables.set(\"savedPaymentMethodId\", data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Saved Methods - 2 Set Default Payment Method",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods/{{savedPaymentMethodId}}/default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods",
+                "{{savedPaymentMethodId}}",
+                "default"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"savedPaymentMethodId\")) {",
+                  "  pm.test(\"Skip: no saved payment method\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Saved Methods - 3 Delete Payment Method",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/payment-methods/{{savedPaymentMethodId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "payment-methods",
+                "{{savedPaymentMethodId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"savedPaymentMethodId\")) {",
+                  "  pm.test(\"Skip: no saved payment method\", function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "pm.test(\"Status 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "pm.collectionVariables.unset(\"savedPaymentMethodId\");"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [

@@ -18,6 +18,8 @@ import { extractValidationErrorMap } from '../../shared/utils/api-error';
 import { FormsModule } from '@angular/forms';
 import { CheckoutDeliveryComponent } from './checkout-delivery/checkout-delivery.component';
 import { CheckoutService } from '../../core/services/checkout.service';
+import { PaymentMethodsService } from '../../core/services/payment-methods.service';
+import { SavedPaymentMethod } from '../../shared/models/saved-payment-method';
 
 @Component({
   selector: 'app-checkout',
@@ -35,6 +37,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private authState = inject(AuthStateService);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private paymentMethodsService = inject(PaymentMethodsService);
   cartService = inject(CartService);
   checkoutService = inject(CheckoutService);
   addressElement?: StripeAddressElement;
@@ -51,6 +54,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   isOrderConfirmed = false;
   confirmedOrderId: number | null = null;
   confirmationMessage: string | null = null;
+  savePaymentMethod = false;
+  savedPaymentMethods: SavedPaymentMethod[] = [];
+  selectedSavedPaymentMethodId: string | null = null;
+  isLoadingSavedPaymentMethods = false;
   private initialValueSnapshot: string | null = null;
   private lastPolledValue: string | null = null;
   private addressPollingTimerId: ReturnType<typeof setInterval> | null = null;
@@ -70,6 +77,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     try {
       await this.loadDefaultAddressSnapshotFromApi();
+      await this.loadSavedPaymentMethods();
       this.addressElement = await this.stripeService.createAddressElement();
       await this.mountAddressElement(this.addressElement);
       this.bindAddressChangeHandler();
@@ -159,6 +167,53 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     if (event.selectedIndex === 2) {
       await this.initializePaymentElementForStep();
+    }
+  }
+
+  onSavePaymentMethodCheckboxChange(event: MatCheckboxChange): void {
+    this.savePaymentMethod = event.checked;
+  }
+
+  onSelectSavedPaymentMethod(paymentMethodId: string): void {
+    this.selectedSavedPaymentMethodId = paymentMethodId;
+    this.savePaymentMethod = false;
+    this.isPaymentElementReady = true;
+    this.isPaymentElementComplete = true;
+    this.paymentElementError = null;
+    this.paymentElement?.destroy();
+    this.paymentElement = undefined;
+  }
+
+  onUseNewCard(): void {
+    if (!this.selectedSavedPaymentMethodId) {
+      return;
+    }
+
+    this.selectedSavedPaymentMethodId = null;
+    void this.initializePaymentElementForStep();
+  }
+
+  private async loadSavedPaymentMethods(): Promise<void> {
+    this.isLoadingSavedPaymentMethods = true;
+    try {
+      const methods = await firstValueFrom(this.paymentMethodsService.getSavedPaymentMethods());
+      this.savedPaymentMethods = methods;
+      const defaultMethod = methods.find((method) => method.isDefault) ?? null;
+      this.selectedSavedPaymentMethodId = defaultMethod?.id ?? null;
+    } catch (error) {
+      this.savedPaymentMethods = [];
+      this.selectedSavedPaymentMethodId = null;
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          this.snackbar.showWarning('Sessione scaduta. Effettua di nuovo l’accesso per vedere le carte salvate.');
+        } else if (error.status === 403) {
+          this.snackbar.showWarning('Non sei autorizzato a visualizzare i metodi salvati.');
+        } else if (error.status === 502) {
+          this.snackbar.showWarning('Provider pagamenti non disponibile. Mostro solo inserimento nuova carta.');
+        }
+      }
+    } finally {
+      this.isLoadingSavedPaymentMethods = false;
     }
   }
 
@@ -413,7 +468,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.isPaymentElementReady = false;
 
     try {
-      await firstValueFrom(this.stripeService.createOrUpdatePaymentIntent());
+      await firstValueFrom(
+        this.stripeService.createOrUpdatePaymentIntent({
+          savePaymentMethod: this.savePaymentMethod,
+          paymentMethodId: this.selectedSavedPaymentMethodId,
+        }),
+      );
+      if (this.selectedSavedPaymentMethodId) {
+        this.paymentElement?.destroy();
+        this.paymentElement = undefined;
+        this.isPaymentElementReady = true;
+        this.isPaymentElementComplete = true;
+        return;
+      }
+
       this.recreatePaymentContainer();
       this.paymentElement = await this.stripeService.createPaymentElement(true);
       await this.mountPaymentElement(this.paymentElement);
@@ -450,7 +518,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.isPaymentElementReady || !this.isPaymentElementComplete) {
+    if (!this.selectedSavedPaymentMethodId && (!this.isPaymentElementReady || !this.isPaymentElementComplete)) {
       this.snackbar.showWarning('Completa i dati di pagamento prima di proseguire.');
       return;
     }
@@ -465,7 +533,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.paymentElementError = null;
 
     try {
-      const confirmation = await this.stripeService.confirmPayment();
+      await firstValueFrom(
+        this.stripeService.createOrUpdatePaymentIntent({
+          savePaymentMethod: this.savePaymentMethod && !this.selectedSavedPaymentMethodId,
+          paymentMethodId: this.selectedSavedPaymentMethodId,
+        }),
+      );
+
+      const confirmation = await this.stripeService.confirmPayment(this.selectedSavedPaymentMethodId ?? undefined);
       if (!confirmation.isSuccess) {
         this.paymentElementError =
           confirmation.message ?? 'Pagamento non riuscito. Verifica i dati e riprova.';
@@ -494,6 +569,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.isOrderConfirmed = true;
       this.confirmedOrderId = finalizeResult.orderId ?? null;
       this.confirmationMessage = finalizeResult.message ?? null;
+      await this.loadSavedPaymentMethods();
       this.snackbar.showInfo('Pagamento confermato con successo.');
       stepper.next();
     } catch (error) {

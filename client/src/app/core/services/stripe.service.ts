@@ -223,13 +223,13 @@ export class StripeService {
     }
   }
 
-  createOrUpdatePaymentIntent() {
+  createOrUpdatePaymentIntent(request: CreateOrUpdatePaymentIntentRequest = {}) {
     const cart = this.cartService.cart();
     if (!cart) {
       throw new Error('Problem with cart');
     }
 
-    return this.http.post<Cart>(this.baseUrl + 'payments/' + cart.id, {}).pipe(
+    return this.http.post<Cart>(this.baseUrl + 'payments/' + cart.id, request).pipe(
       map((cart) => {
         this.cartService.cart.set(cart);
         return cart;
@@ -237,7 +237,7 @@ export class StripeService {
     );
   }
 
-  async confirmPayment(): Promise<PaymentConfirmationResult> {
+  async confirmPayment(paymentMethodId?: string): Promise<PaymentConfirmationResult> {
     const stripe = await this.getStripe();
     if (!stripe) {
       return {
@@ -247,7 +247,8 @@ export class StripeService {
       };
     }
 
-    if (!this.elements) {
+    const normalizedPaymentMethodId = paymentMethodId?.trim();
+    if (!normalizedPaymentMethodId && !this.elements) {
       return {
         isSuccess: false,
         status: 'missing_elements',
@@ -255,19 +256,23 @@ export class StripeService {
       };
     }
 
-    const submitResult = await this.elements.submit();
-    if (submitResult.error) {
-      return {
-        isSuccess: false,
-        status: submitResult.error.code ?? 'submit_error',
-        message: this.mapStripeError(submitResult.error),
-      };
+    if (!normalizedPaymentMethodId) {
+      const submitResult = await this.elements!.submit();
+      if (submitResult.error) {
+        return {
+          isSuccess: false,
+          status: submitResult.error.code ?? 'submit_error',
+          message: this.mapStripeError(submitResult.error),
+        };
+      }
     }
 
-    const result = await stripe.confirmPayment({
-      elements: this.elements,
-      redirect: 'if_required',
-    });
+    const result = normalizedPaymentMethodId
+      ? await this.confirmPaymentWithSavedMethod(stripe, normalizedPaymentMethodId)
+      : await stripe.confirmPayment({
+          elements: this.elements!,
+          redirect: 'if_required',
+        });
 
     if (result.error) {
       return {
@@ -300,6 +305,29 @@ export class StripeService {
       status: paymentIntent.status,
       paymentIntentId: paymentIntent.id,
     };
+  }
+
+  private async confirmPaymentWithSavedMethod(
+    stripe: Stripe,
+    paymentMethodId: string,
+  ) {
+    const clientSecret = this.cartService.cart()?.clientSecret?.trim();
+    if (!clientSecret) {
+      return {
+        error: {
+          message:
+            'Client secret Stripe mancante nel carrello. Verifica endpoint /payments/{cartId} e mapping clientSecret.',
+        } as StripeError,
+      };
+    }
+
+    return stripe.confirmPayment({
+      clientSecret,
+      confirmParams: {
+        payment_method: paymentMethodId,
+      },
+      redirect: 'if_required',
+    });
   }
 
   finalizePayment(cartId: string, paymentIntentId?: string) {
@@ -363,4 +391,9 @@ export type FinalizePaymentResponse = {
   orderId?: number;
   paymentIntentId?: string;
   message?: string;
+};
+
+export type CreateOrUpdatePaymentIntentRequest = {
+  savePaymentMethod?: boolean;
+  paymentMethodId?: string | null;
 };

@@ -29,6 +29,10 @@ public class StoreContext(DbContextOptions<StoreContext> options) : IdentityDbCo
             address.Property(a => a.Region).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<AppUser>()
+            .Property(user => user.StripeCustomerId)
+            .HasMaxLength(128);
+
         modelBuilder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(token => token.Id);

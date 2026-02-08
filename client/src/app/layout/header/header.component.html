@@ -71,6 +71,10 @@
     <mat-icon>receipt_long</mat-icon>
     <span>My orders</span>
   </button>
+  <button mat-menu-item routerLink="/account/payment-methods">
+    <mat-icon>credit_card</mat-icon>
+    <span>Saved cards</span>
+  </button>
   <mat-divider></mat-divider>
   <button mat-menu-item (click)="logout()">
     <mat-icon>logout</mat-icon>
@@ -110,6 +114,10 @@
     <button mat-menu-item disabled>
       <mat-icon>receipt_long</mat-icon>
       <span>My orders</span>
+    </button>
+    <button mat-menu-item routerLink="/account/payment-methods">
+      <mat-icon>credit_card</mat-icon>
+      <span>Saved cards</span>
     </button>
     <mat-divider></mat-divider>
     <button mat-menu-item (click)="logout()">
