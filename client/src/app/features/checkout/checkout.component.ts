@@ -46,6 +46,7 @@ import { OrdersService } from '../../core/services/orders.service';
 export class CheckoutComponent implements OnInit, OnDestroy {
   private static readonly supportedCountryCodes = new Set(['IT', 'US', 'GB']);
   private static readonly regionRequiredCountryCodes = new Set(['IT', 'US']);
+  private static readonly strictRegionCountryCodes = new Set(['IT', 'US']);
   private stripeService = inject(StripeService);
   private snackbar = inject(SnackbarService);
   private accountService = inject(AccountService);
@@ -126,6 +127,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.snackbar.showWarning(
           'Completa tutti i campi obbligatori dell’indirizzo prima di proseguire.',
         );
+        return;
+      }
+
+      const hasValidShippingAddress = await this.validateShippingAddressForCheckout();
+      if (!hasValidShippingAddress) {
         return;
       }
 
@@ -317,6 +323,44 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       countryCode,
       region,
     };
+  }
+
+  private async validateShippingAddressForCheckout(): Promise<boolean> {
+    if (!this.addressElement) {
+      return false;
+    }
+
+    const result = await this.addressElement.getValue();
+    const address = result.value.address;
+    if (!address) {
+      this.snackbar.showWarning('Indirizzo spedizione non valido. Verifica i campi e riprova.');
+      return false;
+    }
+
+    const countryCode = this.normalizeRequired(address.country).toUpperCase();
+    if (!countryCode || countryCode.length !== 2) {
+      this.snackbar.showWarning('Seleziona un paese valido.');
+      return false;
+    }
+
+    if (!CheckoutComponent.supportedCountryCodes.has(countryCode)) {
+      this.snackbar.showWarning('Paese non supportato. Usa IT, US o GB.');
+      return false;
+    }
+
+    const region = this.normalizeOptional(address.state);
+    if (
+      CheckoutComponent.strictRegionCountryCodes.has(countryCode) &&
+      region &&
+      !/^[A-Za-z]{2}$/.test(region)
+    ) {
+      this.snackbar.showWarning(
+        'Per IT/US il campo Provincia/Stato deve essere la sigla di 2 lettere (es. TO, MI, CA, NY).',
+      );
+      return false;
+    }
+
+    return true;
   }
 
   private showAddressSaveError(error: unknown): void {

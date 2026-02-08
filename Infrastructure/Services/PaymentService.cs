@@ -359,7 +359,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         {
             if (paymentStatus == "requires_payment_method")
             {
-                await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                await UpsertPaymentOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
                 logger.LogWarning("Finalize payment fallita: stato Stripe requires_payment_method");
                 return FinalizePaymentResult.Failure(
                     FinalizePaymentError.PaymentFailed,
@@ -373,7 +373,15 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                 $"Pagamento non ancora completato. Stato Stripe corrente: {paymentStatus}.");
         }
 
-        var order = await UpsertOrderAsync(intent, PaymentOrderStatus.Paid, null);
+        var paymentOrder = await UpsertPaymentOrderAsync(intent, PaymentOrderStatus.Paid, null);
+        var domainOrder = await EnsureDomainOrderAsync(intent, paymentOrder, userId, cart);
+        if (domainOrder == null)
+        {
+            return FinalizePaymentResult.Failure(
+                FinalizePaymentError.PaymentProviderError,
+                "order_creation_failed",
+                "Pagamento confermato ma creazione ordine non riuscita.");
+        }
 
         var metadataCartId = GetMetadataValue(intent.Metadata, "cartId");
         if (!string.IsNullOrWhiteSpace(metadataCartId))
@@ -385,8 +393,8 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         logger.LogInformation(
             "Finalize payment completata con successo: paymentIntentId={PaymentIntentId}, orderId={OrderId}",
             intent.Id,
-            order.Id);
-        return FinalizePaymentResult.Success(order.Id, intent.Id);
+            domainOrder.Id);
+        return FinalizePaymentResult.Success(domainOrder.Id, intent.Id);
     }
 
     public async Task<WebhookProcessResult> ProcessWebhookAsync(string payload, string? stripeSignatureHeader)
@@ -447,13 +455,14 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         switch (eventType)
         {
             case "payment_intent.succeeded":
-                await UpsertOrderAsync(intent, PaymentOrderStatus.Paid, null);
+                var paymentOrder = await UpsertPaymentOrderAsync(intent, PaymentOrderStatus.Paid, null);
+                await EnsureDomainOrderAsync(intent, paymentOrder, GetMetadataValue(intent.Metadata, "userId"), null);
                 await DeleteCartFromMetadataAsync(intent);
                 logger.LogInformation("Webhook processed: payment_intent.succeeded");
                 return WebhookProcessResult.Success("PaymentIntent succeeded processato.");
 
             case "payment_intent.payment_failed":
-                await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                await UpsertPaymentOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
                 logger.LogWarning(
                     "Webhook processed: payment_intent.payment_failed ({FailureMessage})",
                     intent.LastPaymentError?.Message);
@@ -929,7 +938,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         await cartService.DeleteCartAsync(cartId);
     }
 
-    private async Task<PaymentOrder> UpsertOrderAsync(
+    private async Task<PaymentOrder> UpsertPaymentOrderAsync(
         PaymentIntent intent,
         PaymentOrderStatus incomingStatus,
         string? failureMessage)
@@ -975,6 +984,92 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         return order;
     }
 
+    private async Task<Order?> EnsureDomainOrderAsync(
+        PaymentIntent intent,
+        PaymentOrder paymentOrder,
+        string? fallbackUserId,
+        ShoppingCart? knownCart)
+    {
+        if (paymentOrder.OrderId.HasValue)
+        {
+            return await dbContext.Orders
+                .Include(order => order.Details)
+                .FirstOrDefaultAsync(order => order.Id == paymentOrder.OrderId.Value);
+        }
+
+        var finalUserId = NormalizeUserId(GetMetadataValue(intent.Metadata, "userId")) ??
+                          NormalizeUserId(fallbackUserId) ??
+                          NormalizeUserId(paymentOrder.UserId);
+        if (string.IsNullOrWhiteSpace(finalUserId))
+        {
+            logger.LogWarning(
+                "Creazione ordine dominio saltata: userId non disponibile per paymentIntent {PaymentIntentId}",
+                intent.Id);
+            return null;
+        }
+
+        var cartId = GetMetadataValue(intent.Metadata, "cartId") ?? paymentOrder.CartId;
+        var cart = knownCart;
+        if (cart == null && !string.IsNullOrWhiteSpace(cartId))
+        {
+            cart = await cartService.GetCartAsync(cartId);
+        }
+
+        if (cart == null || cart.Items.Count == 0)
+        {
+            logger.LogWarning(
+                "Creazione ordine dominio saltata: carrello non disponibile o vuoto per paymentIntent {PaymentIntentId}",
+                intent.Id);
+            return null;
+        }
+
+        var existingByIntent = await dbContext.PaymentOrders
+            .Where(order => order.PaymentIntentId == paymentOrder.PaymentIntentId)
+            .Where(order => order.OrderId.HasValue)
+            .Select(order => order.OrderId)
+            .FirstOrDefaultAsync();
+
+        if (existingByIntent.HasValue)
+        {
+            var existingOrder = await dbContext.Orders
+                .Include(order => order.Details)
+                .FirstOrDefaultAsync(order => order.Id == existingByIntent.Value);
+            if (existingOrder != null)
+            {
+                paymentOrder.OrderId = existingOrder.Id;
+                paymentOrder.UserId = finalUserId;
+                paymentOrder.UpdatedAtUtc = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+                return existingOrder;
+            }
+        }
+
+        var order = new Order
+        {
+            UserId = finalUserId,
+            OrderDate = DateTime.UtcNow,
+            PaymentType = GetPaymentType(intent),
+            CardNumberMasked = await ExtractCardMaskAsync(intent),
+            OrderTotal = ToMajorUnits(intent.Amount, intent.Currency),
+            OrderStatus = "completato",
+            Details = cart.Items.Select(item => new OrderDetail
+            {
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                UnitPrice = item.Price
+            }).ToList()
+        };
+
+        dbContext.Orders.Add(order);
+        await dbContext.SaveChangesAsync();
+
+        paymentOrder.OrderId = order.Id;
+        paymentOrder.UserId = finalUserId;
+        paymentOrder.UpdatedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync();
+        return order;
+    }
+
     private static PaymentOrderStatus ResolveStatus(PaymentOrderStatus? existingStatus, PaymentOrderStatus incomingStatus)
     {
         if (existingStatus == PaymentOrderStatus.Paid)
@@ -983,6 +1078,67 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         }
 
         return incomingStatus;
+    }
+
+    private static string GetPaymentType(PaymentIntent intent)
+    {
+        var paymentType = intent.PaymentMethodTypes?.FirstOrDefault();
+        return string.IsNullOrWhiteSpace(paymentType) ? "card" : paymentType.Trim().ToLowerInvariant();
+    }
+
+    private static decimal ToMajorUnits(long amountMinorUnits, string? currency)
+    {
+        var normalizedCurrency = currency?.Trim().ToLowerInvariant() ?? "usd";
+        var divisor = normalizedCurrency switch
+        {
+            "jpy" or "krw" or "vnd" => 1m,
+            _ => 100m
+        };
+
+        return decimal.Round(amountMinorUnits / divisor, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static string? NormalizeUserId(string? userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return null;
+        }
+
+        return string.Equals(userId.Trim(), "anonymous", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : userId.Trim();
+    }
+
+    private async Task<string?> ExtractCardMaskAsync(PaymentIntent intent)
+    {
+        var last4 = intent.PaymentMethod?.Card?.Last4;
+        if (!string.IsNullOrWhiteSpace(last4))
+        {
+            return $"**** {last4}";
+        }
+
+        if (string.IsNullOrWhiteSpace(intent.LatestChargeId))
+        {
+            return null;
+        }
+
+        try
+        {
+            StripeConfiguration.ApiKey = stripeSettingsOptions.Value.SecretKey;
+            var chargeService = new ChargeService();
+            var charge = await chargeService.GetAsync(intent.LatestChargeId);
+            var chargeLast4 = charge.PaymentMethodDetails?.Card?.Last4;
+            return string.IsNullOrWhiteSpace(chargeLast4) ? null : $"**** {chargeLast4}";
+        }
+        catch (StripeException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Impossibile leggere le ultime 4 cifre carta per paymentIntent {PaymentIntentId}",
+                intent.Id);
+            return null;
+        }
     }
 
     private static string? GetMetadataValue(IDictionary<string, string>? metadata, string key)

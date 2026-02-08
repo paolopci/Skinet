@@ -31,5 +31,11 @@ public class PaymentOrderConfiguration : IEntityTypeConfiguration<PaymentOrder>
 
         builder.HasIndex(order => order.CartId);
         builder.HasIndex(order => order.UserId);
+        builder.HasIndex(order => order.OrderId);
+
+        builder.HasOne(order => order.Order)
+            .WithMany()
+            .HasForeignKey(order => order.OrderId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

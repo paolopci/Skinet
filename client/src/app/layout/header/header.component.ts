@@ -6,7 +6,7 @@ import { AuthStateService } from '../../core/services/auth-state.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { OrdersService } from '../../core/services/orders.service';
-import { Subscription } from 'rxjs';
+import { merge, of, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -40,10 +40,12 @@ export class HeaderComponent implements OnDestroy {
 
       this.hasOrders.set(null);
       this.hasOrdersSub?.unsubscribe();
-      this.hasOrdersSub = this.ordersService.hasOrders().subscribe({
-        next: (value) => this.hasOrders.set(value),
-        error: () => this.hasOrders.set(false),
-      });
+      this.hasOrdersSub = merge(of(void 0), this.ordersService.hasOrdersRefresh$)
+        .pipe(switchMap(() => this.ordersService.hasOrders()))
+        .subscribe({
+          next: (value) => this.hasOrders.set(value),
+          error: () => this.hasOrders.set(false),
+        });
     });
   }
 

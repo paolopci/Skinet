@@ -190,6 +190,8 @@ export class StripeService {
         const optionsWithLinkDisabled: StripePaymentElementOptions = {
           layout: 'tabs',
           wallets: {
+            applePay: 'never',
+            googlePay: 'never',
             link: 'never',
           },
         };

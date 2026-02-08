@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of } from 'rxjs';
+import { map, Observable, of, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { OrderListItem } from '../../shared/models/order-list-item';
 import { OrdersQueryParams } from '../../shared/models/orders-query-params';
@@ -12,8 +12,10 @@ import { OrdersResponse } from '../../shared/models/orders-response';
 export class OrdersService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
+  private readonly hasOrdersRefreshSubject = new Subject<void>();
 
   private hasOrdersCache: boolean | null = null;
+  readonly hasOrdersRefresh$ = this.hasOrdersRefreshSubject.asObservable();
 
   getOrders(params: OrdersQueryParams): Observable<OrdersResponse> {
     const apiParams = new HttpParams().set('sortBy', params.sortBy).set('order', params.order);
@@ -49,6 +51,7 @@ export class OrdersService {
 
   invalidateOrdersCache(): void {
     this.hasOrdersCache = null;
+    this.hasOrdersRefreshSubject.next();
   }
 
   private toOrdersResponse(rawResponse: unknown, params: OrdersQueryParams): OrdersResponse {
