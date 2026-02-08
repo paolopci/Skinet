@@ -5,4 +5,7 @@ export const environment = {
   stripePublicKey:
     (window as { __env?: { STRIPE_PUBLIC_KEY?: string } }).__env?.STRIPE_PUBLIC_KEY ??
     '',
+  stripeMode:
+    (window as { __env?: { STRIPE_MODE?: 'test' | 'live' } }).__env?.STRIPE_MODE ??
+    'test',
 };

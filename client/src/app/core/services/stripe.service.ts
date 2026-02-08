@@ -25,6 +25,7 @@ export class StripeService {
   private http = inject(HttpClient);
 
   private readonly publicKey = environment.stripePublicKey?.trim();
+  private readonly stripeMode = environment.stripeMode;
   private stripePromise: Promise<Stripe | null> | null = null;
   private elements?: StripeElements;
   private addressElement?: StripeAddressElement;
@@ -33,6 +34,25 @@ export class StripeService {
   private getPublicKey(): string {
     if (!this.publicKey) {
       throw new Error('Stripe public key missing. Set STRIPE_PUBLIC_KEY in assets/env.js');
+    }
+
+    const isTestKey = this.publicKey.startsWith('pk_test_');
+    const isLiveKey = this.publicKey.startsWith('pk_live_');
+
+    if (!isTestKey && !isLiveKey) {
+      throw new Error('Invalid Stripe public key format. Use pk_test_* or pk_live_* in assets/env.js');
+    }
+
+    if (this.stripeMode !== 'test' && this.stripeMode !== 'live') {
+      throw new Error('Invalid STRIPE_MODE. Use "test" or "live" in assets/env.js');
+    }
+
+    if (this.stripeMode === 'test' && isLiveKey) {
+      throw new Error('Stripe key/mode mismatch: STRIPE_MODE is test but public key is live');
+    }
+
+    if (this.stripeMode === 'live' && isTestKey) {
+      throw new Error('Stripe key/mode mismatch: STRIPE_MODE is live but public key is test');
     }
 
     return this.publicKey;

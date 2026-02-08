@@ -1,8 +1,8 @@
 using Core.Entities;
 using Core.Interfaces;
-using Microsoft.Extensions.Configuration;
+using Infrastructure.Settings;
+using Microsoft.Extensions.Options;
 using Stripe;
-using Stripe.V2;
 
 namespace Infrastructure.Services;
 
@@ -10,7 +10,7 @@ namespace Infrastructure.Services;
 /// Gestisce la creazione e l'aggiornamento dei Payment Intent Stripe
 /// in base al contenuto corrente del carrello.
 /// </summary>
-public class PaymentService(IConfiguration config,
+public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                             ICartService cartService,
                             IGenericRepository<Core.Entities.Product> productRepo,
                             IGenericRepository<DeliveryMethod> dmRepo) : IPaymentService
@@ -27,8 +27,10 @@ public class PaymentService(IConfiguration config,
     /// </returns>
     public async Task<ShoppingCart?> CreateUpdatePaymentIntent(string cartId)
     {
+        var stripeSettings = stripeSettingsOptions.Value;
+
         // Inizializza la chiave segreta Stripe per la chiamata API corrente.
-        StripeConfiguration.ApiKey = config["StripeSettings:SecretKey"];
+        StripeConfiguration.ApiKey = stripeSettings.SecretKey;
 
         var cart = await cartService.GetCartAsync(cartId);
 
@@ -68,7 +70,7 @@ public class PaymentService(IConfiguration config,
                 // Stripe richiede importi in centesimi; il totale include prodotti e spedizione.
                 Amount = (long)cart.Items.Sum(x => x.Quantity * (x.Price * 100))
                 + (long)shippingPrice * 100,
-                Currency = "usd",
+                Currency = stripeSettings.Currency,
                 PaymentMethodTypes = ["card"]
             };
 
