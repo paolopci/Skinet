@@ -612,6 +612,33 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private getPaymentElementLoadErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const apiMessage =
+        typeof error.error?.details === 'string'
+          ? error.error.details
+          : typeof error.error?.message === 'string'
+            ? error.error.message
+            : null;
+
+      if (apiMessage) {
+        return apiMessage;
+      }
+
+      if (error.status === 404) {
+        return 'Carrello non trovato o scaduto. Torna al carrello e riprova.';
+      }
+
+      if (error.status === 400) {
+        return 'Dati carrello non validi per inizializzare il pagamento.';
+      }
+
+      if (error.status === 502) {
+        return 'Errore Stripe durante inizializzazione pagamento. Riprova tra poco.';
+      }
+
+      return error.message || 'Errore HTTP durante il caricamento del pagamento.';
+    }
+
     if (!(error instanceof Error)) {
       return 'Errore inatteso durante il caricamento del pagamento.';
     }

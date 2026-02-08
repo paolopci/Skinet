@@ -210,10 +210,54 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                     options.PaymentMethod = normalizedPaymentMethodId;
                 }
 
-                intent = await service.UpdateAsync(cart.PaymentIntentId, options, new RequestOptions
+                try
                 {
-                    IdempotencyKey = $"pi:update:{SanitizeForIdempotency(cart.PaymentIntentId)}:{cartHash}"
-                });
+                    intent = await service.UpdateAsync(cart.PaymentIntentId, options, new RequestOptions
+                    {
+                        IdempotencyKey = $"pi:update:{SanitizeForIdempotency(cart.PaymentIntentId)}:{cartHash}"
+                    });
+                }
+                catch (StripeException ex) when (ShouldRecreatePaymentIntentOnUpdateFailure(ex))
+                {
+                    logger.LogWarning(
+                        ex,
+                        "PaymentIntent {PaymentIntentId} non più aggiornabile. Rigenero un nuovo PaymentIntent.",
+                        cart.PaymentIntentId);
+
+                    cart.PaymentIntentId = null;
+                    cart.ClientSecret = null;
+
+                    var recreateOptions = new PaymentIntentCreateOptions
+                    {
+                        Amount = totalAmountInMinorUnits,
+                        Currency = stripeSettings.Currency,
+                        PaymentMethodTypes = ["card"],
+                        Metadata = metadata
+                    };
+                    if (!string.IsNullOrWhiteSpace(stripeCustomerId))
+                    {
+                        recreateOptions.Customer = stripeCustomerId;
+                    }
+
+                    if (savePaymentMethod)
+                    {
+                        recreateOptions.SetupFutureUsage = "off_session";
+                    }
+
+                    if (normalizedPaymentMethodId is not null)
+                    {
+                        recreateOptions.PaymentMethod = normalizedPaymentMethodId;
+                    }
+
+                    intent = await service.CreateAsync(recreateOptions, new RequestOptions
+                    {
+                        IdempotencyKey = $"pi:recreate:{SanitizeForIdempotency(cart.Id)}:{cartHash}"
+                    });
+                    logger.LogInformation("PaymentIntent rigenerato: {PaymentIntentId}", intent.Id);
+                    cart.PaymentIntentId = intent.Id;
+                    cart.ClientSecret = intent.ClientSecret;
+                }
+
                 logger.LogInformation("PaymentIntent aggiornato: {PaymentIntentId}", cart.PaymentIntentId);
 
                 if (!string.IsNullOrWhiteSpace(intent.ClientSecret))
@@ -833,6 +877,28 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         }
 
         return value.Trim().Replace(" ", "-", StringComparison.Ordinal);
+    }
+
+    private static bool ShouldRecreatePaymentIntentOnUpdateFailure(StripeException ex)
+    {
+        var code = ex.StripeError?.Code?.Trim();
+        if (string.Equals(code, "resource_missing", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(code, "payment_intent_unexpected_state", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (ex.HttpStatusCode == System.Net.HttpStatusCode.BadRequest &&
+            string.Equals(ex.StripeError?.Type, "invalid_request_error", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound;
     }
 
     private static bool IsPaymentIntentOwnedByUser(PaymentIntent intent, string? userId)
