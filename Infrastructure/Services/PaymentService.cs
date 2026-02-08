@@ -4,6 +4,7 @@ using Core.Payments;
 using Infrastructure.Data;
 using Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,7 +20,8 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                             ICartService cartService,
                             IGenericRepository<Core.Entities.Product> productRepo,
                             IGenericRepository<DeliveryMethod> dmRepo,
-                            StoreContext dbContext) : IPaymentService
+                            StoreContext dbContext,
+                            ILogger<PaymentService> logger) : IPaymentService
 {
     /// <summary>
     /// Crea un nuovo Payment Intent o aggiorna quello esistente associato al carrello.
@@ -32,8 +34,12 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
     /// </returns>
     public async Task<PaymentIntentOperationResult> CreateUpdatePaymentIntent(string cartId, string? userId)
     {
+        using var scope = BeginCorrelationScope(cartId, null, userId);
+        logger.LogInformation("Avvio create/update PaymentIntent");
+
         if (string.IsNullOrWhiteSpace(cartId))
         {
+            logger.LogWarning("Create/update PaymentIntent fallita: cartId non valido");
             return PaymentIntentOperationResult.Failure(
                 PaymentIntentOperationError.InvalidCartId,
                 "Identificativo carrello non valido.");
@@ -48,6 +54,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
         if (cart == null)
         {
+            logger.LogWarning("Create/update PaymentIntent fallita: carrello non trovato");
             return PaymentIntentOperationResult.Failure(
                 PaymentIntentOperationError.CartNotFound,
                 $"Carrello '{cartId}' non trovato.");
@@ -55,6 +62,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
         if (cart.Items.Count == 0)
         {
+            logger.LogWarning("Create/update PaymentIntent fallita: carrello vuoto");
             return PaymentIntentOperationResult.Failure(
                 PaymentIntentOperationError.CartEmpty,
                 "Il carrello non contiene articoli.");
@@ -67,6 +75,9 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
             var deliveryMethod = await dmRepo.GetByIdAsync((int)cart.DeliverMethodId);
             if (deliveryMethod == null)
             {
+                logger.LogWarning(
+                    "Create/update PaymentIntent fallita: delivery method {DeliveryMethodId} non trovato",
+                    cart.DeliverMethodId);
                 return PaymentIntentOperationResult.Failure(
                     PaymentIntentOperationError.DeliveryMethodNotFound,
                     $"Metodo di spedizione '{cart.DeliverMethodId}' non trovato.");
@@ -81,6 +92,9 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
             if (productItem == null)
             {
+                logger.LogWarning(
+                    "Create/update PaymentIntent fallita: product {ProductId} non trovato",
+                    item.ProductId);
                 return PaymentIntentOperationResult.Failure(
                     PaymentIntentOperationError.ProductNotFound,
                     $"Prodotto '{item.ProductId}' non trovato.");
@@ -117,6 +131,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                 {
                     IdempotencyKey = $"pi:create:{SanitizeForIdempotency(cart.Id)}:{cartHash}"
                 });
+                logger.LogInformation("PaymentIntent creato: {PaymentIntentId}", intent.Id);
                 cart.PaymentIntentId = intent.Id;
                 cart.ClientSecret = intent.ClientSecret;
             }
@@ -131,6 +146,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
                 {
                     IdempotencyKey = $"pi:update:{SanitizeForIdempotency(cart.PaymentIntentId)}:{cartHash}"
                 });
+                logger.LogInformation("PaymentIntent aggiornato: {PaymentIntentId}", cart.PaymentIntentId);
 
                 if (!string.IsNullOrWhiteSpace(intent.ClientSecret))
                 {
@@ -141,19 +157,25 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         catch (StripeException ex)
         {
             var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante create/update PaymentIntent: {StripeMessage}", message);
             return PaymentIntentOperationResult.Failure(
                 PaymentIntentOperationError.PaymentProviderError,
                 $"Errore Stripe durante aggiornamento PaymentIntent: {message}");
         }
 
         await cartService.SetCartAsync(cart);
+        logger.LogInformation("Create/update PaymentIntent completata con successo");
         return PaymentIntentOperationResult.Success(cart);
     }
 
     public async Task<FinalizePaymentResult> FinalizePaymentAsync(string cartId, string? userId, string? paymentIntentId)
     {
+        using var scope = BeginCorrelationScope(cartId, paymentIntentId, userId);
+        logger.LogInformation("Avvio finalize payment");
+
         if (string.IsNullOrWhiteSpace(cartId))
         {
+            logger.LogWarning("Finalize payment fallita: cartId non valido");
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.InvalidCartId,
                 "invalid_cart_id",
@@ -163,6 +185,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         var cart = await cartService.GetCartAsync(cartId);
         if (cart == null)
         {
+            logger.LogWarning("Finalize payment fallita: carrello non trovato");
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.CartNotFound,
                 "cart_not_found",
@@ -171,6 +194,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
         if (string.IsNullOrWhiteSpace(cart.PaymentIntentId))
         {
+            logger.LogWarning("Finalize payment fallita: paymentIntent mancante sul carrello");
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.PaymentIntentMissing,
                 "missing_payment_intent",
@@ -180,6 +204,10 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         if (!string.IsNullOrWhiteSpace(paymentIntentId) &&
             !string.Equals(paymentIntentId, cart.PaymentIntentId, StringComparison.Ordinal))
         {
+            logger.LogWarning(
+                "Finalize payment fallita: paymentIntent mismatch (cart:{CartPaymentIntentId}, request:{RequestPaymentIntentId})",
+                cart.PaymentIntentId,
+                paymentIntentId);
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.PaymentIntentMismatch,
                 "payment_intent_mismatch",
@@ -198,6 +226,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         catch (StripeException ex)
         {
             var message = ex.StripeError?.Message ?? ex.Message;
+            logger.LogError(ex, "Errore Stripe durante finalize payment: {StripeMessage}", message);
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.PaymentProviderError,
                 "stripe_error",
@@ -206,6 +235,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
         if (!IsPaymentIntentOwnedByUser(intent, userId))
         {
+            logger.LogWarning("Finalize payment fallita: ownership paymentIntent non valida");
             return FinalizePaymentResult.Failure(
                 FinalizePaymentError.Forbidden,
                 "forbidden",
@@ -218,6 +248,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
             if (paymentStatus == "requires_payment_method")
             {
                 await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                logger.LogWarning("Finalize payment fallita: stato Stripe requires_payment_method");
                 return FinalizePaymentResult.Failure(
                     FinalizePaymentError.PaymentFailed,
                     paymentStatus,
@@ -236,15 +267,24 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         if (!string.IsNullOrWhiteSpace(metadataCartId))
         {
             await cartService.DeleteCartAsync(metadataCartId);
+            logger.LogInformation("Carrello eliminato dopo finalize: {CartId}", metadataCartId);
         }
 
+        logger.LogInformation(
+            "Finalize payment completata con successo: paymentIntentId={PaymentIntentId}, orderId={OrderId}",
+            intent.Id,
+            order.Id);
         return FinalizePaymentResult.Success(order.Id, intent.Id);
     }
 
     public async Task<WebhookProcessResult> ProcessWebhookAsync(string payload, string? stripeSignatureHeader)
     {
+        using var scope = BeginCorrelationScope(null, null, null);
+        logger.LogInformation("Avvio elaborazione webhook Stripe");
+
         if (string.IsNullOrWhiteSpace(stripeSignatureHeader))
         {
+            logger.LogWarning("Webhook Stripe rifiutato: header firma mancante");
             return WebhookProcessResult.Failure(
                 WebhookProcessError.MissingSignature,
                 "Header Stripe-Signature mancante.");
@@ -253,6 +293,7 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         var stripeSettings = stripeSettingsOptions.Value;
         if (string.IsNullOrWhiteSpace(stripeSettings.WebhookSecret))
         {
+            logger.LogError("Webhook Stripe rifiutato: webhook secret non configurato");
             return WebhookProcessResult.Failure(
                 WebhookProcessError.MissingWebhookSecret,
                 "WebhookSecret Stripe non configurato.");
@@ -265,12 +306,14 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         }
         catch (StripeException ex)
         {
+            logger.LogWarning(ex, "Webhook Stripe rifiutato: firma non valida");
             return WebhookProcessResult.Failure(
                 WebhookProcessError.InvalidSignature,
                 $"Firma webhook non valida: {ex.Message}");
         }
         catch (Exception ex)
         {
+            logger.LogWarning(ex, "Webhook Stripe rifiutato: payload non valido");
             return WebhookProcessResult.Failure(
                 WebhookProcessError.InvalidPayload,
                 $"Payload webhook non valido: {ex.Message}");
@@ -278,22 +321,34 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
 
         if (stripeEvent.Data.Object is not PaymentIntent intent)
         {
+            logger.LogInformation("Webhook Stripe ignorato: payload senza PaymentIntent");
             return WebhookProcessResult.Success("Evento ignorato: payload non contiene PaymentIntent.");
         }
 
+        using var paymentIntentScope = BeginCorrelationScope(
+            GetMetadataValue(intent.Metadata, "cartId"),
+            intent.Id,
+            GetMetadataValue(intent.Metadata, "userId"));
+
         var eventType = stripeEvent.Type?.ToLowerInvariant() ?? string.Empty;
+        logger.LogInformation("Evento webhook Stripe ricevuto: {StripeEventType}", eventType);
         switch (eventType)
         {
             case "payment_intent.succeeded":
                 await UpsertOrderAsync(intent, PaymentOrderStatus.Paid, null);
                 await DeleteCartFromMetadataAsync(intent);
+                logger.LogInformation("Webhook processed: payment_intent.succeeded");
                 return WebhookProcessResult.Success("PaymentIntent succeeded processato.");
 
             case "payment_intent.payment_failed":
                 await UpsertOrderAsync(intent, PaymentOrderStatus.Failed, intent.LastPaymentError?.Message);
+                logger.LogWarning(
+                    "Webhook processed: payment_intent.payment_failed ({FailureMessage})",
+                    intent.LastPaymentError?.Message);
                 return WebhookProcessResult.Success("PaymentIntent failed processato.");
 
             default:
+                logger.LogInformation("Webhook Stripe ignorato: evento {StripeEventType} non gestito", stripeEvent.Type);
                 return WebhookProcessResult.Success($"Evento ignorato: {stripeEvent.Type}");
         }
     }
@@ -446,5 +501,28 @@ public class PaymentService(IOptions<StripeSettings> stripeSettingsOptions,
         }
 
         return metadata.TryGetValue(key, out var value) ? value : null;
+    }
+
+    private IDisposable BeginCorrelationScope(string? cartId, string? paymentIntentId, string? userId)
+    {
+        var traceId = Guid.NewGuid().ToString("N");
+        var scope = new Dictionary<string, object?>
+        {
+            ["TraceId"] = traceId,
+            ["CartId"] = cartId,
+            ["PaymentIntentId"] = paymentIntentId,
+            ["UserId"] = userId
+        };
+
+        return logger.BeginScope(scope) ?? NoopDisposable.Instance;
+    }
+
+    private sealed class NoopDisposable : IDisposable
+    {
+        public static readonly NoopDisposable Instance = new();
+
+        public void Dispose()
+        {
+        }
     }
 }
