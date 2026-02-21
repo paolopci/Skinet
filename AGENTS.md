@@ -32,6 +32,11 @@ Obiettivo: mantenere un flusso di lavoro chiaro, coerente e manutenibile per API
 5) Testa e verifica il codice modificato; riformatta i file toccati.
 6) Se compare `Accesso negato`, usa permessi elevati.
 7) Il contenuto del piano di implementazione deve essere sempre in italiano.
+8) Prima di usare una o più skill, richiedi sempre conferma preventiva in chat e attendi risposta esplicita dell'utente prima di eseguirle.
+9) Gestisci ed esegui solo le skill elencate in `allowed_tools` (o nell'elenco equivalente delle skill abilitate per la sessione corrente).
+10) Per ogni chiamata a una skill che può modificare dati o innescare operazioni irreversibili, richiedi una conferma esplicita dedicata e attendi una risposta chiara prima di procedere.
+11) Dopo la richiesta di conferma, non avviare alcuna skill finché l'utente non risponde in modo valido e inequivocabile.
+12) Dopo ogni conferma ricevuta, valida in 1-2 righe che la skill è stata autorizzata correttamente e solo dopo procedi con l'esecuzione.
 
 ## 4) Regole Plan Mode e File Piano
 - In modalità plan, crea un file markdown del piano solo se il piano viene realmente implementato (con modifiche al repository).
