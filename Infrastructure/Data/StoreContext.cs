@@ -51,3 +51,4 @@ public class StoreContext(DbContextOptions<StoreContext> options) : IdentityDbCo
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductConfiguration).Assembly);
     }
 }
+

@@ -139,6 +139,7 @@ Controlli MCP:
 - se non coincide, avvisa di aggiornarlo manualmente
 - se `config.toml` non è leggibile per policy, chiedi verifica manuale senza proporre fix dei caratteri `?`
 - MCP SQL Server: database default `SkinetDB`; usa `SELECT` dirette senza `USE`
+- quando usi una nuova funzionalità di librerie o framework di terze parti, consulta sempre Context7 prima dell'implementazione
 
 Stato UI client (dinamico):
 - vedere `docs/status-ui.md`
