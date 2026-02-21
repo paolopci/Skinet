@@ -1,0 +1,590 @@
+﻿{
+    "openapi":  "3.0.1",
+    "info":  {
+                 "title":  "Fallback API Documentation",
+                 "description":  "Spec OpenAPI generata da analisi statica dei controller.",
+                 "version":  "v1"
+             },
+    "paths":  {
+                  "/api/dev/admin-check":  {
+                                               "get":  {
+                                                           "operationId":  "Dev_AdminCheck",
+                                                           "tags":  [
+                                                                        "Dev"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/account/login":  {
+                                             "post":  {
+                                                          "operationId":  "Account_Login",
+                                                          "tags":  [
+                                                                       "Account"
+                                                                   ],
+                                                          "responses":  {
+                                                                            "200":  {
+                                                                                        "description":  "Success"
+                                                                                    }
+                                                                        }
+                                                      }
+                                         },
+                  "/api/account/current-user":  {
+                                                    "get":  {
+                                                                "operationId":  "Account_GetCurrentUser",
+                                                                "tags":  [
+                                                                             "Account"
+                                                                         ],
+                                                                "responses":  {
+                                                                                  "200":  {
+                                                                                              "description":  "Success"
+                                                                                          }
+                                                                              }
+                                                            }
+                                                },
+                  "/api/payments/{cartId}":  {
+                                                 "post":  {
+                                                              "operationId":  "Payments_CreateOrUpdatePaymentIntent",
+                                                              "tags":  [
+                                                                           "Payments"
+                                                                       ],
+                                                              "responses":  {
+                                                                                "200":  {
+                                                                                            "description":  "Success"
+                                                                                        }
+                                                                            }
+                                                          }
+                                             },
+                  "/api/products/{id:int}":  {
+                                                 "get":  {
+                                                             "operationId":  "Products_GetProduct",
+                                                             "tags":  [
+                                                                          "Products"
+                                                                      ],
+                                                             "responses":  {
+                                                                               "200":  {
+                                                                                           "description":  "Success"
+                                                                                       }
+                                                                           }
+                                                         },
+                                                 "put":  {
+                                                             "operationId":  "Products_UpdateProduct",
+                                                             "tags":  [
+                                                                          "Products"
+                                                                      ],
+                                                             "responses":  {
+                                                                               "200":  {
+                                                                                           "description":  "Success"
+                                                                                       }
+                                                                           }
+                                                         },
+                                                 "delete":  {
+                                                                "operationId":  "Products_DeleteProduct",
+                                                                "tags":  [
+                                                                             "Products"
+                                                                         ],
+                                                                "responses":  {
+                                                                                  "200":  {
+                                                                                              "description":  "Success"
+                                                                                          }
+                                                                              }
+                                                            }
+                                             },
+                  "/api/buggy/forbidden":  {
+                                               "get":  {
+                                                           "operationId":  "Buggy_GetForbidden",
+                                                           "tags":  [
+                                                                        "Buggy"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/buggy/redirect-products":  {
+                                                       "get":  {
+                                                                   "operationId":  "Buggy_GetRedirectProducts",
+                                                                   "tags":  [
+                                                                                "Buggy"
+                                                                            ],
+                                                                   "responses":  {
+                                                                                     "200":  {
+                                                                                                 "description":  "Success"
+                                                                                             }
+                                                                                 }
+                                                               }
+                                                   },
+                  "/api/products/types":  {
+                                              "get":  {
+                                                          "operationId":  "Products_GetTypes",
+                                                          "tags":  [
+                                                                       "Products"
+                                                                   ],
+                                                          "responses":  {
+                                                                            "200":  {
+                                                                                        "description":  "Success"
+                                                                                    }
+                                                                        }
+                                                      }
+                                          },
+                  "/api/payments/webhook":  {
+                                                "post":  {
+                                                             "operationId":  "Payments_HandleStripeWebhook",
+                                                             "tags":  [
+                                                                          "Payments"
+                                                                      ],
+                                                             "responses":  {
+                                                                               "200":  {
+                                                                                           "description":  "Success"
+                                                                                       }
+                                                                           }
+                                                         }
+                                            },
+                  "/api/payments/{cartId}/finalize":  {
+                                                          "post":  {
+                                                                       "operationId":  "Payments_FinalizePayment",
+                                                                       "tags":  [
+                                                                                    "Payments"
+                                                                                ],
+                                                                       "responses":  {
+                                                                                         "200":  {
+                                                                                                     "description":  "Success"
+                                                                                                 }
+                                                                                     }
+                                                                   }
+                                                      },
+                  "/api/payments/payment-methods/{paymentMethodId}/default":  {
+                                                                                  "post":  {
+                                                                                               "operationId":  "Payments_SetDefaultSavedPaymentMethod",
+                                                                                               "tags":  [
+                                                                                                            "Payments"
+                                                                                                        ],
+                                                                                               "responses":  {
+                                                                                                                 "200":  {
+                                                                                                                             "description":  "Success"
+                                                                                                                         }
+                                                                                                             }
+                                                                                           }
+                                                                              },
+                  "/api/dev/reset-identity":  {
+                                                  "post":  {
+                                                               "operationId":  "Dev_ResetIdentity",
+                                                               "tags":  [
+                                                                            "Dev"
+                                                                        ],
+                                                               "responses":  {
+                                                                                 "200":  {
+                                                                                             "description":  "Success"
+                                                                                         }
+                                                                             }
+                                                           }
+                                              },
+                  "/api/cart":  {
+                                    "get":  {
+                                                "operationId":  "Cart_GetCartById",
+                                                "tags":  [
+                                                             "Cart"
+                                                         ],
+                                                "responses":  {
+                                                                  "200":  {
+                                                                              "description":  "Success"
+                                                                          }
+                                                              }
+                                            },
+                                    "delete":  {
+                                                   "operationId":  "Cart_DeleteCart",
+                                                   "tags":  [
+                                                                "Cart"
+                                                            ],
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "Success"
+                                                                             }
+                                                                 }
+                                               },
+                                    "post":  {
+                                                 "operationId":  "Cart_UpdateCart",
+                                                 "tags":  [
+                                                              "Cart"
+                                                          ],
+                                                 "responses":  {
+                                                                   "200":  {
+                                                                               "description":  "Success"
+                                                                           }
+                                                               }
+                                             }
+                                },
+                  "/api/buggy/service-unavailable":  {
+                                                         "get":  {
+                                                                     "operationId":  "Buggy_GetServiceUnavailable",
+                                                                     "tags":  [
+                                                                                  "Buggy"
+                                                                              ],
+                                                                     "responses":  {
+                                                                                       "200":  {
+                                                                                                   "description":  "Success"
+                                                                                               }
+                                                                                   }
+                                                                 }
+                                                     },
+                  "/api/buggy/status-505":  {
+                                                "get":  {
+                                                            "operationId":  "Buggy_GetStatus505",
+                                                            "tags":  [
+                                                                         "Buggy"
+                                                                     ],
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "Success"
+                                                                                      }
+                                                                          }
+                                                        }
+                                            },
+                  "/api/products/brands":  {
+                                               "get":  {
+                                                           "operationId":  "Products_GetBrands",
+                                                           "tags":  [
+                                                                        "Products"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/buggy/server-error":  {
+                                                  "get":  {
+                                                              "operationId":  "Buggy_GetServerError",
+                                                              "tags":  [
+                                                                           "Buggy"
+                                                                       ],
+                                                              "responses":  {
+                                                                                "200":  {
+                                                                                            "description":  "Success"
+                                                                                        }
+                                                                            }
+                                                          }
+                                              },
+                  "/api/account/address":  {
+                                               "get":  {
+                                                           "operationId":  "Account_GetAddress",
+                                                           "tags":  [
+                                                                        "Account"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       },
+                                               "put":  {
+                                                           "operationId":  "Account_UpdateAddress",
+                                                           "tags":  [
+                                                                        "Account"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/buggy/not-found":  {
+                                               "get":  {
+                                                           "operationId":  "Buggy_GetNotFound",
+                                                           "tags":  [
+                                                                        "Buggy"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/orders":  {
+                                      "post":  {
+                                                   "operationId":  "Orders_CreateOrder",
+                                                   "tags":  [
+                                                                "Orders"
+                                                            ],
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "Success"
+                                                                             }
+                                                                 }
+                                               },
+                                      "get":  {
+                                                  "operationId":  "Orders_GetOrders",
+                                                  "tags":  [
+                                                               "Orders"
+                                                           ],
+                                                  "responses":  {
+                                                                    "200":  {
+                                                                                "description":  "Success"
+                                                                            }
+                                                                }
+                                              }
+                                  },
+                  "/api/account/verify-email":  {
+                                                    "post":  {
+                                                                 "operationId":  "Account_VerifyEmail",
+                                                                 "tags":  [
+                                                                              "Account"
+                                                                          ],
+                                                                 "responses":  {
+                                                                                   "200":  {
+                                                                                               "description":  "Success"
+                                                                                           }
+                                                                               }
+                                                             }
+                                                },
+                  "/api/account/reset-password":  {
+                                                      "post":  {
+                                                                   "operationId":  "Account_ResetPassword",
+                                                                   "tags":  [
+                                                                                "Account"
+                                                                            ],
+                                                                   "responses":  {
+                                                                                     "200":  {
+                                                                                                 "description":  "Success"
+                                                                                             }
+                                                                                 }
+                                                               }
+                                                  },
+                  "/api/products":  {
+                                        "post":  {
+                                                     "operationId":  "Products_CreateProduct",
+                                                     "tags":  [
+                                                                  "Products"
+                                                              ],
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "Success"
+                                                                               }
+                                                                   }
+                                                 },
+                                        "get":  {
+                                                    "operationId":  "Products_GetProducts",
+                                                    "tags":  [
+                                                                 "Products"
+                                                             ],
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "Success"
+                                                                              }
+                                                                  }
+                                                }
+                                    },
+                  "/api/payments/payment-methods/{paymentMethodId}":  {
+                                                                          "delete":  {
+                                                                                         "operationId":  "Payments_DeleteSavedPaymentMethod",
+                                                                                         "tags":  [
+                                                                                                      "Payments"
+                                                                                                  ],
+                                                                                         "responses":  {
+                                                                                                           "200":  {
+                                                                                                                       "description":  "Success"
+                                                                                                                   }
+                                                                                                       }
+                                                                                     }
+                                                                      },
+                  "/api/buggy/unauthorized":  {
+                                                  "get":  {
+                                                              "operationId":  "Buggy_GetUnauthorized",
+                                                              "tags":  [
+                                                                           "Buggy"
+                                                                       ],
+                                                              "responses":  {
+                                                                                "200":  {
+                                                                                            "description":  "Success"
+                                                                                        }
+                                                                            }
+                                                          }
+                                              },
+                  "/api/orders/{orderId:int}":  {
+                                                    "get":  {
+                                                                "operationId":  "Orders_GetOrderById",
+                                                                "tags":  [
+                                                                             "Orders"
+                                                                         ],
+                                                                "responses":  {
+                                                                                  "200":  {
+                                                                                              "description":  "Success"
+                                                                                          }
+                                                                              }
+                                                            },
+                                                    "put":  {
+                                                                "operationId":  "Orders_UpdateOrder",
+                                                                "tags":  [
+                                                                             "Orders"
+                                                                         ],
+                                                                "responses":  {
+                                                                                  "200":  {
+                                                                                              "description":  "Success"
+                                                                                          }
+                                                                              }
+                                                            },
+                                                    "delete":  {
+                                                                   "operationId":  "Orders_DeleteOrder",
+                                                                   "tags":  [
+                                                                                "Orders"
+                                                                            ],
+                                                                   "responses":  {
+                                                                                     "200":  {
+                                                                                                 "description":  "Success"
+                                                                                             }
+                                                                                 }
+                                                               }
+                                                },
+                  "/api/payments/delivery-methods":  {
+                                                         "get":  {
+                                                                     "operationId":  "Payments_GetDeliveryMethod",
+                                                                     "tags":  [
+                                                                                  "Payments"
+                                                                              ],
+                                                                     "responses":  {
+                                                                                       "200":  {
+                                                                                                   "description":  "Success"
+                                                                                               }
+                                                                                   }
+                                                                 }
+                                                     },
+                  "/api/account/register":  {
+                                                "post":  {
+                                                             "operationId":  "Account_Register",
+                                                             "tags":  [
+                                                                          "Account"
+                                                                      ],
+                                                             "responses":  {
+                                                                               "200":  {
+                                                                                           "description":  "Success"
+                                                                                       }
+                                                                           }
+                                                         }
+                                            },
+                  "/api/account/change-password":  {
+                                                       "post":  {
+                                                                    "operationId":  "Account_ChangePassword",
+                                                                    "tags":  [
+                                                                                 "Account"
+                                                                             ],
+                                                                    "responses":  {
+                                                                                      "200":  {
+                                                                                                  "description":  "Success"
+                                                                                              }
+                                                                                  }
+                                                                }
+                                                   },
+                  "/api/account/send-verify-email":  {
+                                                         "post":  {
+                                                                      "operationId":  "Account_SendVerifyEmail",
+                                                                      "tags":  [
+                                                                                   "Account"
+                                                                               ],
+                                                                      "responses":  {
+                                                                                        "200":  {
+                                                                                                    "description":  "Success"
+                                                                                                }
+                                                                                    }
+                                                                  }
+                                                     },
+                  "/api/account/forgot-password":  {
+                                                       "post":  {
+                                                                    "operationId":  "Account_ForgotPassword",
+                                                                    "tags":  [
+                                                                                 "Account"
+                                                                             ],
+                                                                    "responses":  {
+                                                                                      "200":  {
+                                                                                                  "description":  "Success"
+                                                                                              }
+                                                                                  }
+                                                                }
+                                                   },
+                  "/api/payments/payment-methods":  {
+                                                        "get":  {
+                                                                    "operationId":  "Payments_GetSavedPaymentMethods",
+                                                                    "tags":  [
+                                                                                 "Payments"
+                                                                             ],
+                                                                    "responses":  {
+                                                                                      "200":  {
+                                                                                                  "description":  "Success"
+                                                                                              }
+                                                                                  }
+                                                                }
+                                                    },
+                  "/api/buggy/status-550":  {
+                                                "get":  {
+                                                            "operationId":  "Buggy_GetStatus550",
+                                                            "tags":  [
+                                                                         "Buggy"
+                                                                     ],
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "Success"
+                                                                                      }
+                                                                          }
+                                                        }
+                                            },
+                  "/api/cart/merge":  {
+                                          "post":  {
+                                                       "operationId":  "Cart_MergeCart",
+                                                       "tags":  [
+                                                                    "Cart"
+                                                                ],
+                                                       "responses":  {
+                                                                         "200":  {
+                                                                                     "description":  "Success"
+                                                                                 }
+                                                                     }
+                                                   }
+                                      },
+                  "/api/account/logout":  {
+                                              "post":  {
+                                                           "operationId":  "Account_Logout",
+                                                           "tags":  [
+                                                                        "Account"
+                                                                    ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Success"
+                                                                                     }
+                                                                         }
+                                                       }
+                                          },
+                  "/api/buggy/validationerror":  {
+                                                     "post":  {
+                                                                  "operationId":  "Buggy_GetValidationError",
+                                                                  "tags":  [
+                                                                               "Buggy"
+                                                                           ],
+                                                                  "responses":  {
+                                                                                    "200":  {
+                                                                                                "description":  "Success"
+                                                                                            }
+                                                                                }
+                                                              }
+                                                 },
+                  "/api/account/refresh":  {
+                                               "post":  {
+                                                            "operationId":  "Account_Refresh",
+                                                            "tags":  [
+                                                                         "Account"
+                                                                     ],
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "Success"
+                                                                                      }
+                                                                          }
+                                                        }
+                                           }
+              }
+}

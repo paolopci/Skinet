@@ -1,0 +1,128 @@
+:root {
+  --docs-bg: #ffffff;
+  --docs-text: #1f2937;
+  --docs-muted: #4b5563;
+  --docs-border: #e5e7eb;
+  --docs-primary: #0f6cbd;
+  --docs-primary-dark: #0b5ba0;
+  --docs-hero: #f8fbff;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", "Segoe UI Variable", Arial, sans-serif;
+  color: var(--docs-text);
+  background: var(--docs-bg);
+  line-height: 1.5;
+}
+
+.docs-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+}
+
+.docs-topbar {
+  border-bottom: 1px solid var(--docs-border);
+  background: #fff;
+}
+
+.docs-topbar .docs-shell {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.docs-brand {
+  color: var(--docs-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.docs-nav a {
+  color: var(--docs-muted);
+  text-decoration: none;
+  margin-left: 16px;
+  font-size: 0.95rem;
+}
+
+.docs-nav a:hover { color: var(--docs-primary); }
+
+.docs-hero {
+  background: linear-gradient(180deg, var(--docs-hero) 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--docs-border);
+  padding: 36px 0 28px;
+  margin-bottom: 24px;
+}
+
+.docs-hero h1 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+  font-weight: 650;
+}
+
+.docs-hero p {
+  margin: 0;
+  color: var(--docs-muted);
+  max-width: 860px;
+}
+
+.docs-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.docs-card {
+  border: 1px solid var(--docs-border);
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+}
+
+.docs-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.08rem;
+}
+
+.docs-card p {
+  margin: 0 0 12px;
+  color: var(--docs-muted);
+  font-size: 0.92rem;
+}
+
+.docs-card a {
+  color: var(--docs-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.docs-card a:hover { color: var(--docs-primary-dark); }
+
+.docs-section {
+  margin-top: 22px;
+}
+
+.docs-section h2 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.docs-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.docs-list li { margin: 4px 0; }
+
+.docs-footer {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--docs-border);
+  color: var(--docs-muted);
+  font-size: 0.88rem;
+}
